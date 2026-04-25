@@ -1,0 +1,11 @@
+{
+  "name": "rent-a-tree",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -n backend,frontend -c bgBlue,bgGreen \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
