@@ -1,8 +1,7 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import Review from '../models/Review';
-import { AuthRequest } from '../middleware/auth';
 
-export const createReview = async (req: AuthRequest, res: Response): Promise<void> => {
+export const createReview = async (req: Request, res: Response): Promise<void> => {
   const { rating, comment, name } = req.body;
 
   const files = (req.files as Express.Multer.File[]) ?? [];
@@ -12,7 +11,6 @@ export const createReview = async (req: AuthRequest, res: Response): Promise<voi
   }));
 
   const review = await Review.create({
-    user: req.userId,
     name: name || 'Anonymous',
     rating: Number(rating),
     comment,
@@ -22,7 +20,7 @@ export const createReview = async (req: AuthRequest, res: Response): Promise<voi
   res.status(201).json(review);
 };
 
-export const getReviews = async (_req: AuthRequest, res: Response): Promise<void> => {
+export const getReviews = async (_req: Request, res: Response): Promise<void> => {
   const reviews = await Review.find().sort({ createdAt: -1 });
   res.json(reviews);
 };

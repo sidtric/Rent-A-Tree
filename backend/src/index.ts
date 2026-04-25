@@ -7,7 +7,8 @@ import connectDB from './config/db';
 import authRoutes   from './routes/auth';
 import treeRoutes   from './routes/trees';
 import rentalRoutes from './routes/rentals';
-import reviewRoutes from './routes/reviews';
+import reviewRoutes     from './routes/reviews';
+import farmUpdateRoutes from './routes/farmUpdates';
 
 const app = express();
 
@@ -18,7 +19,8 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api/auth',    authRoutes);
 app.use('/api/trees',   treeRoutes);
 app.use('/api/rentals', rentalRoutes);
-app.use('/api/reviews', reviewRoutes);
+app.use('/api/reviews',     reviewRoutes);
+app.use('/api/farm-updates', farmUpdateRoutes);
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
