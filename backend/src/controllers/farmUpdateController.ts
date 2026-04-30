@@ -4,7 +4,7 @@ import FarmUpdate from '../models/FarmUpdate';
 export const postUpdate = async (req: Request, res: Response): Promise<void> => {
   const files = (req.files as Express.Multer.File[]) ?? [];
   const media = files.map(f => ({
-    url: `/uploads/${f.filename}`,
+    url: (f as any).path,
     type: f.mimetype.startsWith('video') ? 'video' as const : 'image' as const,
   }));
   const update = await FarmUpdate.create({
