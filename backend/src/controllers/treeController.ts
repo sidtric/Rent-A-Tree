@@ -13,6 +13,10 @@ export const getTreeById = async (req: Request, res: Response): Promise<void> =>
 };
 
 export const createTree = async (req: Request, res: Response): Promise<void> => {
-  const tree = await Tree.create(req.body);
+  const file = req.file as Express.Multer.File & { path?: string };
+  const tree = await Tree.create({
+    ...req.body,
+    ...(file?.path ? { imageUrl: file.path } : {}),
+  });
   res.status(201).json(tree);
 };
