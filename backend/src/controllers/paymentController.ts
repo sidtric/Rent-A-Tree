@@ -50,7 +50,7 @@ export const verifyPayment = async (req: Request & { userId?: string }, res: Res
   const rental = await Rental.create({
     user:           req.userId,
     tree:           treeId,
-    season:         season || '2025',
+    season:         season || '2026',
     deliveryAddress,
     estimatedYield: Math.floor((tree.yieldMin + tree.yieldMax) / 2),
     paymentId:      razorpay_payment_id,
