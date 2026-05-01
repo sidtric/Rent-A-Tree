@@ -11,6 +11,7 @@ import paymentRoutes from './routes/payments';
 import reviewRoutes     from './routes/reviews';
 import farmUpdateRoutes from './routes/farmUpdates';
 import videoRoutes      from './routes/videos';
+import contactRoutes    from './routes/contact';
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/reviews',     reviewRoutes);
 app.use('/api/farm-updates', farmUpdateRoutes);
 app.use('/api/videos',      videoRoutes);
+app.use('/api/contact',     contactRoutes);
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
