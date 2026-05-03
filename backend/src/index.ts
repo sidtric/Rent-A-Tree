@@ -12,11 +12,13 @@ import reviewRoutes     from './routes/reviews';
 import farmUpdateRoutes from './routes/farmUpdates';
 import videoRoutes      from './routes/videos';
 import contactRoutes    from './routes/contact';
+import adminRoutes      from './admin/adminRoutes';
 
 const app = express();
 
 const allowedOrigins = [
   'http://localhost:3000',
+  'http://localhost:3001',
   'http://localhost:5173',
   'https://rent-a-tree.vercel.app',
 ];
@@ -32,6 +34,7 @@ app.use('/api/reviews',     reviewRoutes);
 app.use('/api/farm-updates', farmUpdateRoutes);
 app.use('/api/videos',      videoRoutes);
 app.use('/api/contact',     contactRoutes);
+app.use('/api/admin',       adminRoutes);
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 

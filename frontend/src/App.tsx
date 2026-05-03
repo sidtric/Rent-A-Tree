@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react';
 import { api } from './api';
 import type { Tree, Rental, User, Review, FarmUpdate, Video } from './types';
+import AdminDashboard from './admin/AdminDashboard';
 import './App.css';
 
 const PLAN_EMOJI:  Record<string, string> = { sapling: '🌳', adult: '🌳', grand: '🌳' };
 const PLAN_LABEL:  Record<string, string> = { sapling: 'Small Tree Pack', adult: 'Medium Tree Pack', grand: 'Premium Tree Pack' };
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
+const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || '';
+
+const isAdmin = (user: { email: string } | null) =>
+  !!user && !!ADMIN_EMAIL && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
 const STEPS = [
   { n: 1, icon: '🌳', h: 'Choose Your Tree',   p: 'Pick a plan — Sapling, Adult, or Grand — from our Ramnagar orchard.' },
@@ -86,7 +91,7 @@ export default function App() {
   const [rentals, setRentals] = useState<Rental[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [videos, setVideos] = useState<Video[]>([]);
-  const [view, setView] = useState<'home' | 'dashboard' | 'about' | 'contact' | 'blog' | 'terms' | 'privacy' | 'refund' | 'shipping' | 'farm'>('home');
+  const [view, setView] = useState<'home' | 'dashboard' | 'about' | 'contact' | 'blog' | 'terms' | 'privacy' | 'refund' | 'shipping' | 'farm' | 'admin'>('home');
   const [authModal, setAuthModal] = useState<'login' | 'register' | null>(null);
   const [form, setForm] = useState({ name: '', email: '', password: '', phone: '' });
   const [rentForm, setRentForm] = useState({ treeId: '', deliveryAddress: '', season: '2026' });
@@ -237,6 +242,14 @@ export default function App() {
     trees.reduce((acc, t) => { acc[t.plan] = acc[t.plan] || t; return acc; }, {} as Record<string, Tree>)
   );
 
+  if (view === 'admin' && user && isAdmin(user)) {
+    return (
+      <div className="app">
+        <AdminDashboard user={user} onExit={() => setView('home')} />
+      </div>
+    );
+  }
+
   return (
     <div className="app">
       <nav className="nav">
@@ -249,6 +262,7 @@ export default function App() {
           <span className="nav-link" onClick={() => setView('contact')}>Contact</span>
           {user && <span className="nav-link" onClick={() => setView('dashboard')}>My Tree</span>}
           <span className="nav-link" onClick={() => { setView('home'); setTimeout(() => document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth' }), 100); }}>Shop</span>
+          {isAdmin(user) && <span className="nav-link nav-link-admin" onClick={() => setView('admin')}>⚙ Admin</span>}
         </div>
         <div className="nav-links">
           {user ? (
