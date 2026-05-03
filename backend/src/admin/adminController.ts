@@ -10,26 +10,29 @@ import FarmUpdate from '../models/FarmUpdate';
 // ── Overview / Stats ─────────────────────────────────────────────────────────
 
 export const getStats = async (_req: AuthRequest, res: Response): Promise<void> => {
-  const [trees, rentals, reviews, users, videos] = await Promise.all([
+  const [totalTrees, availableTrees, totalRentals, cancelledRentals, reviews, users, videos] = await Promise.all([
     Tree.countDocuments(),
+    Tree.countDocuments({ isAvailable: true }),
     Rental.countDocuments(),
+    Rental.countDocuments({ status: 'cancelled' }),
     Review.countDocuments(),
     User.countDocuments(),
     Video.countDocuments(),
   ]);
 
-  const revenue = await Rental.aggregate([
-    { $match: { paymentStatus: 'paid' } },
-    { $group: { _id: null, total: { $sum: '$amount' } } },
-  ]);
+  const paidRentals = await Rental.find({ status: { $in: ['active', 'completed'] } }).populate<{ tree: { pricePerSeason: number } }>('tree', 'pricePerSeason');
+  const totalRevenue = paidRentals.reduce((sum, r) => sum + (r.tree?.pricePerSeason ?? 0), 0);
 
   res.json({
-    trees,
-    rentals,
+    totalTrees,
+    availableTrees,
+    rentedTrees: totalTrees - availableTrees,
+    totalRentals,
+    cancelledRentals,
     reviews,
     users,
     videos,
-    revenue: revenue[0]?.total ?? 0,
+    totalRevenue,
   });
 };
 
