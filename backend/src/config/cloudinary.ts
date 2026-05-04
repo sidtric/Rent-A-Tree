@@ -25,6 +25,15 @@ export const videoStorage = new CloudinaryStorage({
   } as object,
 });
 
+export const mixedStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder:        'yourorchard/media',
+    resource_type: 'auto',
+  } as object,
+});
+
 export const uploadImage = multer({ storage: imageStorage });
 export const uploadVideo = multer({ storage: videoStorage });
+export const uploadMixed = multer({ storage: mixedStorage });
 export default cloudinary;
