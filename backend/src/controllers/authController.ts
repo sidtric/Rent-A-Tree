@@ -25,7 +25,8 @@ export const login = async (req: Request, res: Response): Promise<void> => {
     const user = await User.findOne({ email });
     if (!user || !(await user.comparePassword(password))) { res.status(401).json({ message: 'Invalid email or password' }); return; }
     res.json({ token: signToken(user.id), user: { id: user.id, name: user.name, email: user.email } });
-  } catch {
+  } catch (err) {
+    process.stdout.write(`[login error] ${String(err)}\n`);
     res.status(500).json({ message: 'Server error' });
   }
 };
