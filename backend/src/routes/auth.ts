@@ -4,8 +4,8 @@ import { protect } from '../middleware/auth';
 
 const router = Router();
 
-router.post('/send-otp',   sendOtp);
+router.post('/send-otp', sendOtp);
 router.post('/verify-otp', verifyOtp);
-router.get('/me',          protect, getMe);
+router.get('/me', protect, getMe);
 
 export default router;

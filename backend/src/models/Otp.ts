@@ -2,7 +2,7 @@ import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IOtp extends Document {
   phone: string;
-  otp:   string;
+  otp: string;
   expiry: Date;
 }
 
