@@ -9,9 +9,9 @@ export interface IUser extends Document {
 
 const UserSchema = new Schema<IUser>(
   {
-    name:      { type: String, trim: true },
-    phone:     { type: String, required: true, unique: true },
-    otp:       { type: String },
+    name: { type: String, trim: true },
+    phone: { type: String, required: true, unique: true },
+    otp: { type: String },
     otpExpiry: { type: Date },
   },
   { timestamps: true }

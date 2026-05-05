@@ -16,7 +16,8 @@ export const createOrder = async (req: Request & { userId?: string }, res: Respo
     if (!tree || !tree.isAvailable) { res.status(400).json({ message: 'Tree not available' }); return; }
     const order = await getRazorpay().orders.create({ amount: tree.pricePerSeason * 100, currency: 'INR', receipt: `rcpt_${Date.now()}` });
     res.json({ orderId: order.id, amount: order.amount, currency: order.currency, treeName: tree.name });
-  } catch {
+  } catch (err) {
+    process.stdout.write(`[createOrder error] ${String(err)}\n`);
     res.status(500).json({ message: 'Server error' });
   }
 };

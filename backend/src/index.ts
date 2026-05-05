@@ -21,6 +21,8 @@ const allowedOrigins = [
   'http://localhost:3001',
   'http://localhost:5173',
   'https://rent-a-tree.vercel.app',
+  'https://yourorchard.in',
+  'https://www.yourorchard.in',
 ];
 app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
@@ -40,5 +42,6 @@ app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-connectDB().catch((err) => console.error('MongoDB connection failed:', err.message));
+connectDB()
+  .then(() => app.listen(PORT))
+  .catch((err) => { process.stderr.write(String(err)); process.exit(1); });

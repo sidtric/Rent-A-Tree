@@ -12,4 +12,6 @@ const OtpSchema = new Schema<IOtp>({
   expiry: { type: Date,   required: true },
 });
 
-export default mongoose.model<IOtp>('Otp', OtpSchema, 'otps');
+OtpSchema.index({ expiry: 1 }, { expireAfterSeconds: 0 });
+
+export default mongoose.model<IOtp>('Otp', OtpSchema);
