@@ -20,18 +20,18 @@ const STEPS = [
 ];
 
 const PLAN_IMAGES: Record<string, string> = {
-  sapling: '/hero-mango-v3.jpg',
-  adult:   '/hero-mango-v3.jpg',
-  grand:   '/hero-mango-v3.jpg',
+  sapling: '/mango-close.jpg',
+  adult:   '/mango-close.jpg',
+  grand:   '/mango-close.jpg',
 };
 
 const GALLERY_PHOTOS = [
-  { url: '/hero-mango-v3.jpg', label: 'Fresh Mangoes' },
-  { url: '/hero-mango-v3.jpg', label: 'Yellow Alphonso' },
-  { url: '/hero-mango-v3.jpg', label: 'Orchard Canopy' },
-  { url: '/hero-mango-v3.jpg', label: 'Our Farm' },
-  { url: '/hero-mango-v3.jpg', label: 'Open Fields' },
-  { url: '/hero-mango-v3.jpg', label: 'Harvest Basket' },
+  { url: '/orchard-hero.jpg', label: 'Fresh Mangoes' },
+  { url: '/orchard-hero.jpg', label: 'Yellow Alphonso' },
+  { url: '/orchard-hero.jpg', label: 'Orchard Canopy' },
+  { url: '/orchard-hero.jpg', label: 'Our Farm' },
+  { url: '/orchard-hero.jpg', label: 'Open Fields' },
+  { url: '/orchard-hero.jpg', label: 'Harvest Basket' },
 ];
 
 const FEATURES = [
@@ -44,6 +44,9 @@ const FEATURES = [
 ];
 
 const MANGO_BOXES = [
+  { id: 'chausa',   name: 'Chausa Mango',   tag: '✨ Jewel of Ramnagar',   desc: 'Velvety smooth, saffron-hued, and so juicy it\'s best enjoyed straight from the skin. Straight from our bagiche.',  price: 1299, img: '/mango-close.jpg' },
+  { id: 'dasheri',  name: 'Dasheri Mango',  tag: '❤️ People\'s Favourite', desc: 'Honey-sweet, thin-skinned, and loved by everyone. Plucked fresh from our Ramnagar orchard at peak ripeness.',         price: 1499, img: '/mango-close.jpg' },
+  { id: 'langra',   name: 'Langra Mango',   tag: '💛 Most Fulfilling',     desc: 'Buttery, fiberless, and deeply aromatic. One box from our Ramnagar bagiche and you\'re fully satisfied.',               price: 1399, img: '/mango-close.jpg' },
   { id: 'chausa',   name: 'Chausa Mango',   tag: '✨ Jewel of Ramnagar',   desc: 'Velvety smooth, saffron-hued, and so juicy it\'s best enjoyed straight from the skin. Straight from our bagiche.',  price: 1, img: '/mango-basket.jpg' },
   { id: 'dasheri',  name: 'Dasheri Mango',  tag: '❤️ People\'s Favourite', desc: 'Honey-sweet, thin-skinned, and loved by everyone. Plucked fresh from our Ramnagar orchard at peak ripeness.',         price: 1, img: '/mango-dasheri.jpg' },
   { id: 'langra',   name: 'Langra Mango',   tag: '💛 Most Fulfilling',     desc: 'Buttery, fiberless, and deeply aromatic. One box from our Ramnagar bagiche and you\'re fully satisfied.',               price: 1, img: '/mango-langra.jpg' },
@@ -52,32 +55,32 @@ const MANGO_BOXES = [
 const VARIETIES = [
   {
     id: 'chausa',  name: 'Chausa',  tagline: 'Jewel of Ramnagar',
-    img: '/mango-basket.jpg',
+    img: '/mango-close.jpg',
     treeImg: '/chausa-tree.jpg',
     gallery: [
-      '/mango-basket.jpg',
-      '/mango-basket.jpg',
-      '/mango-basket.jpg',
+      '/mango-close.jpg',
+      '/mango-close.jpg',
+      '/mango-close.jpg',
     ],
   },
   {
     id: 'dasheri', name: 'Dasheri', tagline: 'People\'s Favourite',
-    img: '/mango-dasheri.jpg',
+    img: '/mango-close.jpg',
     treeImg: '/dasheri-tree.jpg',
     gallery: [
-      '/mango-dasheri.jpg',
-      '/mango-dasheri.jpg',
-      '/mango-dasheri.jpg',
+      '/mango-close.jpg',
+      '/mango-close.jpg',
+      '/mango-close.jpg',
     ],
   },
   {
     id: 'langra',  name: 'Langra',  tagline: 'Most Fulfilling',
-    img: '/mango-langra.jpg',
+    img: '/mango-close.jpg',
     treeImg: '/langra-tree.jpg',
     gallery: [
-      '/mango-langra.jpg',
-      '/mango-langra.jpg',
-      '/mango-langra.jpg',
+      '/mango-close.jpg',
+      '/mango-close.jpg',
+      '/mango-close.jpg',
     ],
   },
 ];
@@ -536,7 +539,7 @@ export default function App() {
             </div>
             <div className="hero-visual">
               <div className="hero-img-wrap">
-                <img className="hero-img" src="/hero-mango-v3.jpg" alt="Mango orchard at sunset in Ramnagar, Uttarakhand" />
+                <img className="hero-img" src="/mango-close.jpg" alt="Fresh mangoes hanging on tree in Ramnagar, Uttarakhand" />
               </div>
             </div>
           </section>
@@ -792,7 +795,7 @@ export default function App() {
               setCart(prev => {
                 const existing = prev.find(i => i.id === rentModal._id);
                 if (existing) return prev;
-                return [...prev, { id: rentModal._id, name: rentModal.name, price: rentModal.pricePerSeason, qty: 1, img: '/hero-mango-v3.jpg', type: 'tree', treeObj: rentModal, season: rentForm.season }];
+                return [...prev, { id: rentModal._id, name: rentModal.name, price: rentModal.pricePerSeason, qty: 1, img: '/orchard-hero.jpg', type: 'tree', treeObj: rentModal, season: rentForm.season }];
               });
               setRentModal(null);
               setRentForm({ treeId: '', deliveryAddress: '', season: '2026' });
