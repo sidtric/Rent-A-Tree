@@ -8,11 +8,12 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
 type Tab = 'overview' | 'trees' | 'reviews' | 'farmupdates' | 'videos' | 'farmphotos' | 'publicupdates';
 
 const TABS: { id: Tab; icon: string; label: string }[] = [
-  { id: 'overview',    icon: '📊', label: 'Overview'     },
-  { id: 'trees',       icon: '🌳', label: 'Trees'        },
+  { id: 'overview',      icon: '📊', label: 'Overview'      },
+  { id: 'trees',         icon: '🌳', label: 'Trees'         },
   { id: 'publicupdates', icon: '🌿', label: 'Life on Farm'  },
-  { id: 'farmupdates',  icon: '📷', label: 'User Updates'  },
-  { id: 'reviews',      icon: '⭐', label: 'Reviews'       },
+  { id: 'farmupdates',   icon: '📷', label: 'User Updates'  },
+  { id: 'videos',        icon: '🎥', label: 'Videos'        },
+  { id: 'reviews',       icon: '⭐', label: 'Reviews'       },
 ];
 
 interface TreeForm {

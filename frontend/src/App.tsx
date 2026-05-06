@@ -269,7 +269,8 @@ export default function App() {
       data.append('comment', reviewForm.comment);
       data.append('name', user?.name || reviewForm.name || 'Anonymous');
       if (reviewFiles) Array.from(reviewFiles).forEach(f => data.append('media', f));
-      const res = await fetch(`${API_BASE}/api/reviews`, { method: 'POST', body: data }).then(r => r.json());
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${API_BASE}/api/reviews`, { method: 'POST', headers: { Authorization: `Bearer ${token || ''}` }, body: data }).then(r => r.json());
       if (res._id) {
         setMsg('Review posted! Thank you 🌳'); setReviewForm({ rating: 5, comment: '', name: '' }); setReviewFiles(null);
         api.get('/reviews').then(setReviews).catch(() => {});
