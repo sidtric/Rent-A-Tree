@@ -11,9 +11,12 @@ export const adminOnly = async (
   next: NextFunction
 ): Promise<void> => {
   if (!req.userId) { res.status(401).json({ message: 'Not authorized' }); return; }
-  if (!ADMIN_EMAILS.length) { res.status(403).json({ message: 'Admin access not configured on server' }); return; }
-  const user = await User.findById(req.userId).select('email');
-  if (!user || !ADMIN_EMAILS.includes(user.email.toLowerCase())) {
+  const user = await User.findById(req.userId).select('email role');
+  if (!user) { res.status(401).json({ message: 'User not found' }); return; }
+  // Allow if email is in ADMIN_EMAILS env list OR if the user has role='admin' in DB
+  const isAdminEmail = ADMIN_EMAILS.length > 0 && ADMIN_EMAILS.includes(user.email.toLowerCase());
+  const isAdminRole  = (user as any).role === 'admin';
+  if (!isAdminEmail && !isAdminRole) {
     res.status(403).json({ message: 'Forbidden: admin only' }); return;
   }
   next();
