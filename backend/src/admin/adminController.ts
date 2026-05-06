@@ -81,6 +81,21 @@ export const adminGetUsers = async (_req: AuthRequest, res: Response): Promise<v
   res.json(users);
 };
 
+export const adminSearchUsers = async (req: AuthRequest, res: Response): Promise<void> => {
+  const { email } = req.query as { email?: string };
+  if (!email?.trim()) { res.status(400).json({ message: 'email query param required' }); return; }
+  const users = await User.find({ email: { $regex: email.trim(), $options: 'i' } }).select('-password').limit(10);
+  res.json(users);
+};
+
+export const adminSetRole = async (req: AuthRequest, res: Response): Promise<void> => {
+  const { role } = req.body as { role: 'user' | 'admin' };
+  if (!['user', 'admin'].includes(role)) { res.status(400).json({ message: 'role must be "user" or "admin"' }); return; }
+  const updated = await User.findByIdAndUpdate(req.params.id, { role }, { new: true }).select('-password');
+  if (!updated) { res.status(404).json({ message: 'User not found' }); return; }
+  res.json(updated);
+};
+
 // ── Videos ────────────────────────────────────────────────────────────────────
 
 export const adminGetVideos = async (_req: AuthRequest, res: Response): Promise<void> => {
