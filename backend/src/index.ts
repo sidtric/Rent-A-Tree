@@ -11,6 +11,8 @@ import paymentRoutes from './routes/payments';
 import reviewRoutes     from './routes/reviews';
 import farmUpdateRoutes from './routes/farmUpdates';
 import videoRoutes      from './routes/videos';
+import farmPhotoRoutes   from './routes/farmPhotos';
+import publicUpdateRoutes from './routes/publicUpdates';
 import contactRoutes    from './routes/contact';
 import adminRoutes      from './admin/adminRoutes';
 
@@ -35,6 +37,8 @@ app.use('/api/payments', paymentRoutes);
 app.use('/api/reviews',     reviewRoutes);
 app.use('/api/farm-updates', farmUpdateRoutes);
 app.use('/api/videos',      videoRoutes);
+app.use('/api/farm-photos',    farmPhotoRoutes);
+app.use('/api/public-updates', publicUpdateRoutes);
 app.use('/api/contact',     contactRoutes);
 app.use('/api/admin',       adminRoutes);
 
