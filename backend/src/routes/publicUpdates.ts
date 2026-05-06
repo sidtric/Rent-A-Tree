@@ -30,6 +30,19 @@ router.post('/', protect, (req: Request, res: Response, next: any) => {
   }
 });
 
+router.delete('/:id/media/:index', protect, async (req: Request, res: Response) => {
+  const update = await PublicUpdate.findById(req.params.id);
+  if (!update) { res.status(404).json({ message: 'Not found' }); return; }
+  const idx = parseInt(req.params.index, 10);
+  update.media.splice(idx, 1);
+  if (update.media.length === 0) {
+    await PublicUpdate.findByIdAndDelete(req.params.id);
+  } else {
+    await update.save();
+  }
+  res.json({ message: 'Deleted' });
+});
+
 router.delete('/:id', protect, async (req: Request, res: Response) => {
   await PublicUpdate.findByIdAndDelete(req.params.id);
   res.json({ message: 'Deleted' });
