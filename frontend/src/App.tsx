@@ -89,21 +89,12 @@ const TREE_SIZES = [
 ];
 
 function LoopVideo({ src, style }: { src: string; style?: React.CSSProperties }) {
-  const ref = useRef<HTMLVideoElement>(null);
-  useEffect(() => {
-    const v = ref.current!;
-    v.muted = true;
-    const onEnded = () => { v.currentTime = 0; v.play().catch(() => {}); };
-    v.addEventListener('ended', onEnded);
-    v.play().catch(() => {});
-    return () => v.removeEventListener('ended', onEnded);
-  }, [src]);
-  return <video ref={ref} src={src} muted playsInline preload="auto" style={style} />;
+  return <video src={src} autoPlay muted playsInline preload="auto" style={style} />;
 }
 
 function SeamlessVideo({ src }: { src: string }) {
   const style: React.CSSProperties = { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' };
-  return <video src={src} autoPlay muted loop playsInline preload="auto" style={style} />;
+  return <video src={src} autoPlay muted playsInline preload="auto" style={style} />;
 }
 
 export default function App() {
