@@ -192,6 +192,7 @@ export default function App() {
       setAuthModal(null);
       setForm({ firstName: '', lastName: '', email: '', phone: '', password: '', confirm: '' });
       setMsg('');
+      navigate('home');
     } catch { setMsg('Could not connect. Try again.'); }
   };
 
