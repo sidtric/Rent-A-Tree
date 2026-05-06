@@ -7,6 +7,7 @@ import {
   adminGetRentals,
   adminGetReviews,  adminDeleteReview,
   adminGetUsers,    adminSearchUsers, adminSetRole,
+  adminGetPayments, adminGetPaymentById,
   adminGetVideos,   adminDeleteVideo,
   adminGetFarmUpdates, adminDeleteFarmUpdate,
 } from './adminController';
@@ -34,6 +35,10 @@ router.delete('/reviews/:id', adminDeleteReview);
 router.get('/users',              adminGetUsers);
 router.get('/users/search',       adminSearchUsers);
 router.patch('/users/:id/role',   adminSetRole);
+
+// Payments (Razorpay)
+router.get('/payments',        adminGetPayments);
+router.get('/payments/:id',    adminGetPaymentById);
 
 // Videos
 router.get('/videos',        adminGetVideos);

@@ -1,4 +1,5 @@
 import { Response } from 'express';
+import Razorpay from 'razorpay';
 import { AuthRequest } from '../middleware/auth';
 import Tree   from '../models/Tree';
 import Rental from '../models/Rental';
@@ -6,6 +7,11 @@ import Review from '../models/Review';
 import User   from '../models/User';
 import Video  from '../models/Video';
 import FarmUpdate from '../models/FarmUpdate';
+
+const getRazorpay = () => new Razorpay({
+  key_id:     process.env.RAZORPAY_KEY_ID!,
+  key_secret: process.env.RAZORPAY_KEY_SECRET!,
+});
 
 // ── Overview / Stats ─────────────────────────────────────────────────────────
 
@@ -94,6 +100,66 @@ export const adminSetRole = async (req: AuthRequest, res: Response): Promise<voi
   const updated = await User.findByIdAndUpdate(req.params.id, { role }, { new: true }).select('-password');
   if (!updated) { res.status(404).json({ message: 'User not found' }); return; }
   res.json(updated);
+};
+
+// ── Payments (Razorpay) ───────────────────────────────────────────────────────
+
+export const adminGetPayments = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const rzp = getRazorpay();
+    const from  = req.query.from  ? Number(req.query.from)  : undefined;
+    const to    = req.query.to    ? Number(req.query.to)    : undefined;
+    const count = Math.min(Number(req.query.count  || 50), 100);
+
+    const options: Record<string, unknown> = { count };
+    if (from) options.from = from;
+    if (to)   options.to   = to;
+
+    // Fetch payments from Razorpay
+    const rzpRes = await rzp.payments.all(options) as { items: any[]; count: number };
+    const payments = rzpRes.items || [];
+
+    // Enrich with local rental data where we have a matching paymentId
+    const paymentIds = payments.map((p: any) => p.id);
+    const rentals = await Rental.find({ paymentId: { $in: paymentIds } })
+      .populate('user', 'name email')
+      .populate('tree', 'name plan');
+
+    const rentalMap = new Map(rentals.map(r => [r.paymentId, r]));
+
+    const enriched = payments.map((p: any) => ({
+      id:          p.id,
+      orderId:     p.order_id,
+      amount:      p.amount / 100,           // paise → rupees
+      currency:    p.currency,
+      status:      p.status,                 // captured | failed | refunded
+      method:      p.method,                 // card | upi | netbanking | wallet
+      email:       p.email,
+      contact:     p.contact,
+      description: p.description,
+      createdAt:   new Date(p.created_at * 1000).toISOString(),
+      rental:      rentalMap.get(p.id) || null,
+    }));
+
+    const totalCaptured = enriched
+      .filter((p: any) => p.status === 'captured')
+      .reduce((sum: number, p: any) => sum + p.amount, 0);
+
+    res.json({ payments: enriched, total: rzpRes.count, totalCaptured });
+  } catch (err: any) {
+    // Surface the Razorpay error message if available
+    const msg = err?.error?.description || err?.message || 'Failed to fetch payments';
+    res.status(500).json({ message: msg });
+  }
+};
+
+export const adminGetPaymentById = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const payment = await getRazorpay().payments.fetch(req.params.id);
+    res.json(payment);
+  } catch (err: any) {
+    res.status(404).json({ message: err?.error?.description || 'Payment not found' });
+  }
 };
 
 // ── Videos ────────────────────────────────────────────────────────────────────
