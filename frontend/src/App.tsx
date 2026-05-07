@@ -20,6 +20,12 @@ const STEPS = [
   { n: 4, icon: '📦', h: 'Harvest Delivered',  p: 'Handpicked from your tree, packed fresh, and dispatched straight to your door.' },
 ];
 
+const HERO_SLIDES: { type: 'image' | 'video'; src: string }[] = [
+  { type: 'image', src: '/mango-tree-orchard.jpg' },
+  { type: 'image', src: '/mango-tree-sky.jpg' },
+  { type: 'video', src: '/farm-intro.mp4' },
+];
+
 const PLAN_IMAGES: Record<string, string> = {
   sapling: '/mango-close.jpg',
   adult:   '/mango-close.jpg',
@@ -140,10 +146,16 @@ export default function App() {
   });
   const [cartOpen, setCartOpen] = useState(false);
   const [cartStep, setCartStep] = useState<'items' | 'address'>('items');
-  const [addrForm, setAddrForm] = useState({ name: '', phone: '', house: '', street: '', city: '', state: '', pin: '' });
+  const [addrForm, setAddrForm] = useState({ name: '', phone: '', house: '', street: '', city: '', state: '', pin: '', note: '' });
   const [waitlistBox, setWaitlistBox] = useState<{ id: string; name: string } | null>(null);
   const [waitlistForm, setWaitlistForm] = useState({ name: '', email: '' });
   const [waitlistDone, setWaitlistDone] = useState<string[]>([]);
+  const [heroSlide, setHeroSlide] = useState(0);
+
+  useEffect(() => {
+    const t = setInterval(() => setHeroSlide(i => (i + 1) % HERO_SLIDES.length), 6500);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => {
     const t = setInterval(() => setFeatIdx(i => (i + 1) % FEATURES.length), 3500);
@@ -628,6 +640,12 @@ export default function App() {
       {view === 'home' && (
         <>
           <section className="hero">
+            {HERO_SLIDES.map((slide, i) => (
+              slide.type === 'video'
+                ? <video key={slide.src} className="hero-bg-slide hero-bg-video" src={slide.src} autoPlay muted loop playsInline style={{ opacity: i === heroSlide ? 1 : 0 }} />
+                : <div key={slide.src} className="hero-bg-slide" style={{ backgroundImage: `url(${slide.src})`, opacity: i === heroSlide ? 1 : 0 }} />
+            ))}
+            <div className="hero-bg-overlay" />
             <div className="hero-text">
               <div className="hero-label">🌿 Orchard to Doorstep</div>
               <h1 className="hero-heading">Rent a <span>Tree.</span></h1>
@@ -670,21 +688,28 @@ export default function App() {
                     <div className="howit-num">1</div>
                     <div className="howit-icon">🌳</div>
                     <h4>Choose a Tree</h4>
-                    <p>Pick your favorite fruit tree and location.</p>
+                    <p>Pick your favourite variety and tree size from our Ramnagar orchard.</p>
                   </div>
                   <div className="howit-arrow">▸ ▸ ▸</div>
                   <div className="howit-card">
                     <div className="howit-num">2</div>
                     <div className="howit-icon">👨‍🌾</div>
                     <h4>We Grow &amp; Care</h4>
-                    <p>Our farmers take care of your tree naturally.</p>
+                    <p>Our farmers tend your tagged tree naturally, all season long.</p>
                   </div>
                   <div className="howit-arrow">▸ ▸ ▸</div>
                   <div className="howit-card">
                     <div className="howit-num">3</div>
+                    <div className="howit-icon">📸</div>
+                    <h4>Weekly Updates</h4>
+                    <p>Photos and videos of your tree sent to your dashboard every week.</p>
+                  </div>
+                  <div className="howit-arrow">▸ ▸ ▸</div>
+                  <div className="howit-card">
+                    <div className="howit-num">4</div>
                     <div className="howit-icon">🧺</div>
-                    <h4>You Receive Harvest</h4>
-                    <p>Enjoy fresh, seasonal fruits at your doorstep.</p>
+                    <h4>Harvest Delivered</h4>
+                    <p>Handpicked at peak ripeness, packed fresh, delivered to your door.</p>
                   </div>
                 </div>
               </div>
@@ -742,18 +767,14 @@ export default function App() {
                 );
               };
               return (
-                <>
+                <div className="variety-hover-wrap" onMouseLeave={() => setSelectedVariety(null)}>
                   <div className="variety-row">
                     {VARIETIES.map(variety => (
                       <Fragment key={variety.id}>
                         <div
                           className={`variety-card ${selectedVariety === variety.id ? 'active' : ''}`}
-                          onClick={(e) => {
-                            const card = e.currentTarget;
-                            const willOpen = selectedVariety !== variety.id;
-                            setSelectedVariety(willOpen ? variety.id : null);
-                            if (willOpen) setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
-                          }}
+                          onMouseEnter={() => setSelectedVariety(variety.id)}
+                          onClick={() => setSelectedVariety(selectedVariety === variety.id ? null : variety.id)}
                         >
                           <div className="variety-card-img" style={{ backgroundImage: `url(${variety.img})` }} />
                           <div className="variety-card-info">
@@ -767,7 +788,7 @@ export default function App() {
                     ))}
                   </div>
                   {selectedVariety && renderPopup('tree-size-popup-desktop')}
-                </>
+                </div>
               );
             })()}
           </section>
@@ -782,13 +803,10 @@ export default function App() {
             <div className="mango-boxes">
               <div className="box-card box-card-coming-soon">
                 <div className="cs-box-face">
-                  <div className="cs-crate">
-                    <div className="cs-crate-top">
-                      <div className="cs-crate-flap cs-crate-flap-l" />
-                      <div className="cs-crate-handle" />
-                      <div className="cs-crate-flap cs-crate-flap-r" />
-                    </div>
-                    <div className="cs-crate-front">
+                  <div className="cs-crate-wrap">
+                    <div className="cs-crate-top-face" />
+                    <div className="cs-crate-side-face" />
+                    <div className="cs-crate-front-face">
                       <img src="/logo.jpeg" alt="YourOrchard" className="cs-crate-logo" />
                       <div className="cs-crate-holes">
                         {[0,1,2,3,4,5].map(i => <div key={i} className="cs-hole" />)}
@@ -1575,12 +1593,17 @@ export default function App() {
                     <label>PIN Code</label>
                     <input placeholder="6-digit PIN" type="tel" maxLength={6} value={addrForm.pin} onChange={e => setAddrForm(f => ({ ...f, pin: e.target.value.replace(/\D/g, '') }))} />
                   </div>
+                  <div className="addr-field full">
+                    <label>Special Request <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0, color: '#b0b8b2' }}>(optional)</span></label>
+                    <textarea className="addr-textarea" rows={3} placeholder="e.g. Leave at door, call before delivery, handle with care…" value={addrForm.note} onChange={e => setAddrForm(f => ({ ...f, note: e.target.value }))} />
+                  </div>
                 </div>
               </div>
 
               <div className="checkout-right">
                 <div className="order-summary-card">
                   <h2 className="checkout-section-title">Order Summary</h2>
+                  <p style={{ color: 'var(--gray)', fontSize: '0.85rem', margin: '2px 0 0' }}>{cart.length} item{cart.length !== 1 ? 's' : ''} · Free delivery</p>
                   <div className="order-items">
                     {cart.map(item => (
                       <div key={item.id} className="order-item-row">
@@ -1621,21 +1644,21 @@ export default function App() {
                       <span>Total</span>
                       <span>₹{cartTotal.toLocaleString()}</span>
                     </div>
-                    <p className="cart-delivery-note">Harvest from May 15 onwards</p>
                   </div>
-                  <button className="btn-primary full" onClick={() => {
+                  <button className="checkout-pay-btn" onClick={() => {
                     if (!user) { setAuthModal('register'); setCartOpen(false); return; }
-                    const { name, phone, house, street, city, state, pin } = addrForm;
+                    const { name, phone, house, street, city, state, pin, note } = addrForm;
                     if (!name.trim() || !phone.trim() || !house.trim() || !city.trim() || !state.trim() || !pin.trim()) {
                       setMsg('Please fill all address fields'); return;
                     }
                     if (phone.length !== 10) { setMsg('Enter a valid 10-digit phone number'); return; }
                     if (pin.length !== 6) { setMsg('Enter a valid 6-digit PIN code'); return; }
-                    const fullAddress = `${name}, ${phone} — ${house}, ${street ? street + ', ' : ''}${city}, ${state} - ${pin}`;
+                    const fullAddress = `${name}, ${phone} — ${house}, ${street ? street + ', ' : ''}${city}, ${state} - ${pin}${note.trim() ? ` | Note: ${note.trim()}` : ''}`;
                     checkoutCart(fullAddress);
                   }}>
-                    {user ? `Pay ₹${cartTotal.toLocaleString()} →` : 'Login to Checkout →'}
+                    {user ? `Pay ₹${cartTotal.toLocaleString('en-IN')} →` : 'Login to Checkout →'}
                   </button>
+                  <p className="cart-delivery-note" style={{ textAlign: 'center', marginTop: '12px' }}>🌿 Harvest from May 15 onwards · Free delivery</p>
                 </div>
               </div>
             </div>

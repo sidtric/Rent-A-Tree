@@ -79,7 +79,7 @@ app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 app.use('/api/auth',           authLimiter,  authRoutes);
 app.use('/api/trees',          treeRoutes);
 app.use('/api/rentals',        rentalRoutes);
-app.use('/api/payments',       paymentRoutes);
+app.use('/api/payments',       paymentRoutes); 
 app.use('/api/reviews',        reviewRoutes);
 app.use('/api/farm-updates',   farmUpdateRoutes);
 app.use('/api/videos',         videoRoutes);
