@@ -782,8 +782,20 @@ export default function App() {
             <div className="mango-boxes">
               <div className="box-card box-card-coming-soon">
                 <div className="cs-box-face">
-                  <div className="cs-logo">YourOrchard</div>
-                  <div className="cs-label">Coming Soon</div>
+                  <div className="cs-box-flaps">
+                    <div className="cs-flap cs-flap-l" />
+                    <div className="cs-flap cs-flap-r" />
+                  </div>
+                  <div className="cs-box-stamp">
+                    <div className="cs-stamp-logo">YourOrchard</div>
+                    <div className="cs-stamp-divider" />
+                    <div className="cs-stamp-sub">Ramnagar · Uttarakhand</div>
+                  </div>
+                  <div className="cs-box-bottom-strip">
+                    <span>10 KG</span>
+                    <span>Fresh Mangoes</span>
+                    <span className="cs-coming-soon-pill">Coming Soon</span>
+                  </div>
                 </div>
                 <div className="box-card-body">
                   <div className="box-name">Fresh Mango Box</div>
