@@ -20,7 +20,7 @@ const RentalSchema = new Schema<IRental>(
     status:          { type: String, enum: ['active', 'completed', 'cancelled'], default: 'active' },
     deliveryAddress: { type: String, required: true },
     estimatedYield:  { type: Number },
-    paymentId:       { type: String },
+    paymentId:       { type: String, unique: true, sparse: true },
   },
   { timestamps: true }
 );

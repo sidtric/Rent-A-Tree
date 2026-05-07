@@ -29,3 +29,13 @@ export const createTree = async (req: Request, res: Response): Promise<void> => 
     res.status(500).json({ message: 'Server error' });
   }
 };
+
+export const updateTree = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const tree = await Tree.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+    if (!tree) { res.status(404).json({ message: 'Tree not found' }); return; }
+    res.json(tree);
+  } catch {
+    res.status(500).json({ message: 'Server error' });
+  }
+};

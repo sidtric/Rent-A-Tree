@@ -14,6 +14,7 @@ import videoRoutes      from './routes/videos';
 import farmPhotoRoutes   from './routes/farmPhotos';
 import publicUpdateRoutes from './routes/publicUpdates';
 import contactRoutes    from './routes/contact';
+import boxOrderRoutes   from './routes/boxOrders';
 import adminRoutes      from './admin/adminRoutes';
 
 const app = express();
@@ -40,6 +41,7 @@ app.use('/api/videos',      videoRoutes);
 app.use('/api/farm-photos',    farmPhotoRoutes);
 app.use('/api/public-updates', publicUpdateRoutes);
 app.use('/api/contact',     contactRoutes);
+app.use('/api/box-orders',  boxOrderRoutes);
 app.use('/api/admin',       adminRoutes);
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));

@@ -1,13 +1,14 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { api } from './api';
 import type { Tree, Rental, User, Review, FarmUpdate, Video, FarmPhoto, PublicUpdate } from './types';
 import AdminDashboard from './admin/AdminDashboard';
 import './App.css';
 
-const PLAN_EMOJI:  Record<string, string> = { sapling: '🌳', adult: '🌳', grand: '🌳' };
+const PLAN_EMOJI:  Record<string, string> = { sapling: '🌱', adult: '🌳', grand: '🏕️' };
 const PLAN_LABEL:  Record<string, string> = { sapling: 'Small Tree Pack', adult: 'Medium Tree Pack', grand: 'Premium Tree Pack' };
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
 const ADMIN_EMAILS = (import.meta.env.VITE_ADMIN_EMAIL || '').split(',').map((e: string) => e.trim().toLowerCase()).filter(Boolean);
+const CURRENT_SEASON = String(new Date().getFullYear());
 
 const isAdmin = (user: { email?: string } | null) =>
   !!user?.email && ADMIN_EMAILS.includes(user.email.toLowerCase());
@@ -107,14 +108,14 @@ export default function App() {
   const [publicUpdates, setPublicUpdates] = useState<PublicUpdate[]>([]);
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [videoForm, setVideoForm] = useState({ title: '', description: '' });
-  type View = 'home' | 'dashboard' | 'about' | 'contact' | 'blog' | 'terms' | 'privacy' | 'refund' | 'shipping' | 'farm' | 'admin';
-  const validViews: View[] = ['home','dashboard','about','contact','blog','terms','privacy','refund','shipping','farm','admin'];
+  type View = 'home' | 'dashboard' | 'about' | 'contact' | 'blog' | 'terms' | 'privacy' | 'refund' | 'shipping' | 'farm' | 'admin' | 'trees' | 'boxes';
+  const validViews: View[] = ['home','dashboard','about','contact','blog','terms','privacy','refund','shipping','farm','admin','trees','boxes'];
   const hashView = window.location.hash.replace('#','') as View;
   const [view, setView] = useState<View>(validViews.includes(hashView) ? hashView : 'home');
   const [authModal, setAuthModal] = useState<'login' | 'register' | null>(null);
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', password: '', confirm: '' });
   const [rentModal, setRentModal] = useState<Tree | null>(null);
-  const [rentForm, setRentForm] = useState({ treeId: '', deliveryAddress: '', season: '2026' });
+  const [rentForm, setRentForm] = useState({ treeId: '', deliveryAddress: '', season: CURRENT_SEASON });
   const [reviewForm, setReviewForm] = useState({ rating: 5, comment: '', name: '' });
   const [reviewFiles, setReviewFiles] = useState<FileList | null>(null);
   const [updates, setUpdates] = useState<Record<string, FarmUpdate[]>>({});
@@ -125,6 +126,7 @@ export default function App() {
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
   const [activeBlog, setActiveBlog] = useState<{ emoji: string; title: string; date: string; desc: string } | null>(null);
   const [selectedVariety, setSelectedVariety] = useState<string | null>(null);
+  const [treeFilter, setTreeFilter] = useState<'all' | 'sapling' | 'adult' | 'grand'>('all');
   const [cart, setCart] = useState<{ id: string; name: string; price: number; qty: number; img: string; type?: 'tree'; treeObj?: Tree; season?: string }[]>(() => {
     try {
       const saved = localStorage.getItem('cart');
@@ -140,6 +142,16 @@ export default function App() {
   useEffect(() => {
     const t = setInterval(() => setFeatIdx(i => (i + 1) % FEATURES.length), 3500);
     return () => clearInterval(t);
+  }, []);
+
+  useEffect(() => {
+    const onPop = () => {
+      const h = window.location.hash.replace('#', '') as View;
+      if (validViews.includes(h)) setView(h);
+      else setView('home');
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
   }, []);
 
   useEffect(() => {
@@ -163,14 +175,21 @@ export default function App() {
         data.forEach((r: Rental) => {
           api.get(`/farm-updates/${r._id}`).then((u: FarmUpdate[]) =>
             setUpdates(prev => ({ ...prev, [r._id]: Array.isArray(u) ? u : [] }))
-          ).catch(() => {});
+          ).catch(() => {
+            setUpdates(prev => ({ ...prev, [r._id]: [] }));
+          });
         });
       }).catch(() => {});
     }
   }, [user]);
 
-  const navigate = (v: View) => { setView(v); window.location.hash = v === 'home' ? '' : v; };
-  const logout = () => { localStorage.clear(); setUser(null); setRentals([]); setCart([]); setCartOpen(false); navigate('home'); };
+  const navigate = (v: View) => {
+    if (v === 'dashboard' && !user) { setAuthModal('login'); window.location.hash = ''; return; }
+    if (v === 'admin' && !isAdmin(user)) { return; }
+    setView(v);
+    window.location.hash = v === 'home' ? '' : v;
+  };
+  const logout = () => { localStorage.clear(); setUser(null); setRentals([]); setCart([]); setUpdates({}); setCartOpen(false); navigate('home'); };
 
   const handleAuth = async () => {
     if (!form.email.trim() || !form.password.trim()) { setMsg('Please fill all fields'); return; }
@@ -230,7 +249,7 @@ export default function App() {
           if (rental._id) {
             setMsg('Tree rented! Welcome to YourOrchard 🌳');
             setRentModal(null);
-            setRentForm({ treeId: '', deliveryAddress: '', season: '2026' });
+            setRentForm({ treeId: '', deliveryAddress: '', season: CURRENT_SEASON });
             api.get('/trees').then(setTrees);
             api.get('/rentals/my').then(setRentals);
             navigate('dashboard');
@@ -247,6 +266,7 @@ export default function App() {
 
   const prebookBox = (box: { name: string; price: number }) => {
     if (!user) { setAuthModal('register'); return; }
+    setCartOpen(false);
     const rzp = new (window as any).Razorpay({
       key:         import.meta.env.VITE_RAZORPAY_KEY_ID,
       amount:      box.price * 100,
@@ -255,14 +275,25 @@ export default function App() {
       description: `${box.name} — 10 kg box`,
       prefill:     { name: user.name, email: user.email },
       theme:       { color: '#2d6a4f' },
-      handler: () => {
-        setMsg(`${box.name} box prebooked! We'll confirm your delivery date by WhatsApp. 🥭`);
+      modal:       { ondismiss: () => setMsg('Payment cancelled.') },
+      handler: async (response: any) => {
+        const order = await api.post('/box-orders', {
+          items: [{ name: box.name, qty: 1, price: box.price }],
+          paymentId: response.razorpay_payment_id,
+          deliveryAddress: user.name,
+        }).catch(() => null);
+        if (order?._id) {
+          setMsg(`${box.name} prebooked! We'll confirm your delivery date by WhatsApp.`);
+        } else {
+          setMsg('Payment received but order could not be saved. Contact support.');
+        }
       },
     });
     rzp.open();
   };
 
   const handleReview = async () => {
+    if (!user) { setAuthModal('login'); return; }
     if (!reviewForm.comment.trim()) { setMsg('Please write a comment'); return; }
     try {
       const data = new FormData();
@@ -271,7 +302,9 @@ export default function App() {
       data.append('name', user?.name || reviewForm.name || 'Anonymous');
       if (reviewFiles) Array.from(reviewFiles).forEach(f => data.append('media', f));
       const token = localStorage.getItem('token');
-      const res = await fetch(`${API_BASE}/api/reviews`, { method: 'POST', headers: { Authorization: `Bearer ${token || ''}` }, body: data }).then(r => r.json());
+      const raw = await fetch(`${API_BASE}/api/reviews`, { method: 'POST', headers: { Authorization: `Bearer ${token || ''}` }, body: data });
+      if (raw.status === 401) { localStorage.removeItem('token'); localStorage.removeItem('user'); window.location.reload(); return; }
+      const res = await raw.json();
       if (res._id) {
         setMsg('Review posted! Thank you 🌳'); setReviewForm({ rating: 5, comment: '', name: '' }); setReviewFiles(null);
         api.get('/reviews').then(setReviews).catch(() => {});
@@ -295,13 +328,6 @@ export default function App() {
     }
   };
 
-  const loadUpdates = async (rentalId: string) => {
-    if (!updates[rentalId]) {
-      const data = await api.get(`/farm-updates/${rentalId}`);
-      setUpdates(u => ({ ...u, [rentalId]: Array.isArray(data) ? data : [] }));
-    }
-  };
-
   const mediaUrl = (url: string) => url.startsWith('http') ? url : `${API_BASE}${url}`;
 
   const addToCart = (box: { id: string; name: string; price: number; img: string }, andOpen = false) => {
@@ -316,16 +342,16 @@ export default function App() {
 
   const addTreeToCart = (tree: Tree, andOpen = false) => {
     if (!user) { setAuthModal('register'); return; }
-    setCart(prev => {
-      const existing = prev.find(i => i.id === tree._id);
-      if (existing) return prev;
-      return [...prev, { id: tree._id, name: tree.name, price: tree.pricePerSeason, qty: 1, img: '/hero-mango-v3.jpg', type: 'tree', treeObj: tree, season: '2026' }];
-    });
+    const hasTree = cart.some(i => i.type === 'tree');
+    if (hasTree) { setMsg('One tree at a time — checkout your current tree first.'); setCartOpen(true); return; }
+    const alreadyAdded = cart.find(i => i.id === tree._id);
+    if (alreadyAdded) { setMsg(`${tree.name} is already in your cart`); setCartOpen(true); return; }
+    setCart(prev => [...prev, { id: tree._id, name: tree.name, price: tree.pricePerSeason, qty: 1, img: '/hero-mango-v3.jpg', type: 'tree', treeObj: tree, season: CURRENT_SEASON }]);
     if (andOpen) setCartOpen(true);
     else setMsg(`${tree.name} added to cart`);
   };
 
-  const removeFromCart = (id: string) => setCart(prev => prev.filter(i => i.id !== id));
+  const removeFromCart = (id: string) => { setCart(prev => prev.filter(i => i.id !== id)); setMsg('Item removed from cart'); };
   const updateQty = (id: string, qty: number) => {
     if (qty < 1) { removeFromCart(id); return; }
     setCart(prev => prev.map(i => i.id === id ? { ...i, qty } : i));
@@ -337,9 +363,7 @@ export default function App() {
   const proceedToCheckout = () => {
     if (!user) { setAuthModal('register'); setCartOpen(false); return; }
     if (cart.length === 0) return;
-    const hasTree = cart.some(i => i.type === 'tree');
-    if (hasTree) { setCartStep('address'); return; }
-    checkoutCart('');
+    setCartStep('address');
   };
 
   const checkoutCart = async (address: string) => {
@@ -351,6 +375,15 @@ export default function App() {
     if (treeItems.length > 0) {
       const item = treeItems[0];
       const tree = item.treeObj!;
+
+      // Re-check availability against latest fetched trees state
+      const latest = trees.find(t => t._id === tree._id);
+      if (latest && !latest.isAvailable) {
+        setMsg('Sorry, this tree was just rented by someone else. Please pick another tree.');
+        setCart(prev => prev.filter(i => i.id !== item.id));
+        return;
+      }
+
       try {
         const order = await api.post('/payments/create-order', { treeId: tree._id });
         if (!order.orderId) { setMsg(order.message || 'Could not initiate payment'); return; }
@@ -363,6 +396,7 @@ export default function App() {
           order_id:    order.orderId,
           prefill:     { name: user.name, email: user.email },
           theme:       { color: '#2d6a4f' },
+          modal:       { ondismiss: () => setMsg('Payment cancelled. Your cart is saved.') },
           handler: async (response: any) => {
             const rental = await api.post('/payments/verify', {
               ...response,
@@ -371,14 +405,47 @@ export default function App() {
               season: item.season,
             });
             if (rental._id) {
-              setCart(prev => prev.filter(i => i.id !== item.id));
+              // Remove tree from cart, keep boxes
+              setCart(prev => prev.filter(i => i.type !== 'tree'));
               setAddrForm({ name: '', phone: '', house: '', street: '', city: '', state: '', pin: '' });
               setCartStep('items');
-              setMsg('Tree rented! Welcome to YourOrchard');
               api.get('/trees').then(setTrees);
               api.get('/rentals/my').then(setRentals);
-              navigate('dashboard');
-              setCartOpen(false);
+              if (boxItems.length > 0) {
+                // Auto-process remaining box items right after tree rental
+                setMsg('Tree rented! Now completing your box order…');
+                const boxTotal = boxItems.reduce((s, i) => s + i.price * i.qty, 0);
+                const boxRzp = new (window as any).Razorpay({
+                  key:         import.meta.env.VITE_RAZORPAY_KEY_ID,
+                  amount:      boxTotal * 100,
+                  currency:    'INR',
+                  name:        'YourOrchard',
+                  description: boxItems.map(i => `${i.name} x${i.qty}`).join(', '),
+                  prefill:     { name: user?.name, email: user?.email },
+                  theme:       { color: '#2d6a4f' },
+                  modal:       { ondismiss: () => setMsg('Box payment skipped. You can checkout boxes from your cart.') },
+                  handler: async (boxResponse: any) => {
+                    const boxOrder = await api.post('/box-orders', {
+                      items: boxItems.map(i => ({ name: i.name, qty: i.qty, price: i.price })),
+                      paymentId: boxResponse.razorpay_payment_id,
+                      deliveryAddress: address,
+                    });
+                    if (boxOrder._id) {
+                      setCart([]);
+                      setMsg('All done! Tree rented & box order placed. We\'ll WhatsApp you the details.');
+                    } else {
+                      setMsg(boxOrder.message || 'Box order could not be saved. Contact support.');
+                    }
+                    setCartOpen(false);
+                    navigate('dashboard');
+                  },
+                });
+                boxRzp.open();
+              } else {
+                setMsg('Tree rented! Welcome to YourOrchard');
+                navigate('dashboard');
+                setCartOpen(false);
+              }
             } else {
               setMsg(rental.message || 'Payment received but rental creation failed. Contact support.');
             }
@@ -391,29 +458,50 @@ export default function App() {
       return;
     }
 
+    const boxTotal = boxItems.reduce((s, i) => s + i.price * i.qty, 0);
     const rzp = new (window as any).Razorpay({
       key:         import.meta.env.VITE_RAZORPAY_KEY_ID,
-      amount:      cartTotal * 100,
+      amount:      boxTotal * 100,
       currency:    'INR',
       name:        'YourOrchard',
       description: boxItems.map(i => `${i.name} x${i.qty}`).join(', '),
       prefill:     { name: user.name, email: user.email },
       theme:       { color: '#2d6a4f' },
-      handler: () => {
-        setCart([]);
-        setCartOpen(false);
-        setCartStep('items');
-        setAddrForm({ name: '', phone: '', house: '', street: '', city: '', state: '', pin: '' });
-        setMsg('Order placed! We\'ll confirm your delivery date by WhatsApp.');
+      modal:       { ondismiss: () => setMsg('Payment cancelled. Your cart is saved.') },
+      handler: async (response: any) => {
+        const boxOrder = await api.post('/box-orders', {
+          items: boxItems.map(i => ({ name: i.name, qty: i.qty, price: i.price })),
+          paymentId: response.razorpay_payment_id,
+          deliveryAddress: address,
+        }).catch(() => null);
+        if (boxOrder?._id) {
+          setCart([]);
+          setCartOpen(false);
+          setCartStep('items');
+          setAddrForm({ name: '', phone: '', house: '', street: '', city: '', state: '', pin: '' });
+          setMsg('Order placed! We\'ll confirm your delivery date by WhatsApp.');
+        } else {
+          setMsg('Payment received but order could not be saved. Please contact support.');
+        }
       },
     });
     rzp.open();
   };
 
   const cancelRental = async (id: string) => {
-    await api.patch(`/rentals/${id}/cancel`);
-    api.get('/rentals/my').then(setRentals);
-    api.get('/trees').then(setTrees);
+    try {
+      const res = await api.patch(`/rentals/${id}/cancel`);
+      const ok = res.message && !res.message.toLowerCase().includes('not found') && !res.message.toLowerCase().includes('server error');
+      if (ok) {
+        setMsg('Rental cancelled.');
+        api.get('/rentals/my').then(setRentals);
+        api.get('/trees').then(setTrees);
+      } else {
+        setMsg(res.message || 'Could not cancel rental. Try again.');
+      }
+    } catch {
+      setMsg('Could not cancel rental. Try again.');
+    }
   };
 
   const planCards = Object.values(
@@ -437,10 +525,25 @@ export default function App() {
           <span className="nav-link" onClick={() => { navigate('home'); setTimeout(() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' }), 100); }}>How It Works</span>
           <span className="nav-link" onClick={() => { navigate('home'); setTimeout(() => document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth' }), 100); }}>Browse Trees</span>
           <span className={`nav-link ${view === 'farm' ? 'nav-link-active' : ''}`} onClick={() => navigate('farm')}>Life on Farm</span>
-          <span className={`nav-link ${view === 'about' ? 'nav-link-active' : ''}`} onClick={() => navigate('about')}>About Us</span>
-          <span className={`nav-link ${view === 'blog' ? 'nav-link-active' : ''}`} onClick={() => navigate('blog')}>Blog</span>
-          <span className={`nav-link ${view === 'contact' ? 'nav-link-active' : ''}`} onClick={() => navigate('contact')}>Contact</span>
-          <span className="nav-link" onClick={() => { navigate('home'); setTimeout(() => document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth' }), 100); }}>Shop</span>
+          <div className={`nav-dropdown-wrap ${view === 'about' || view === 'blog' || view === 'contact' ? 'nav-link-active' : ''}`}>
+            <span className="nav-link nav-dropdown-trigger">Company ▾</span>
+            <div className="nav-dropdown-menu">
+              <div className="nav-dropdown-card">
+                <span className="nav-dropdown-item" onClick={() => navigate('about')}>About Us</span>
+                <span className="nav-dropdown-item" onClick={() => navigate('blog')}>Blog</span>
+                <span className="nav-dropdown-item" onClick={() => navigate('contact')}>Contact Us</span>
+              </div>
+            </div>
+          </div>
+          <div className="nav-dropdown-wrap">
+            <span className="nav-link nav-dropdown-trigger">Shop ▾</span>
+            <div className="nav-dropdown-menu">
+              <div className="nav-dropdown-card">
+                <span className="nav-dropdown-item" onClick={() => navigate('trees')}>Pick the Tree</span>
+                <span className="nav-dropdown-item" onClick={() => navigate('boxes')}>Pick the Boxes</span>
+              </div>
+            </div>
+          </div>
           {user && <span className={`nav-link ${view === 'dashboard' ? 'nav-link-active' : ''}`} onClick={() => navigate('dashboard')}>My Tree</span>}
           {isAdmin(user) && <span className="nav-link nav-link-admin" onClick={() => navigate('admin')}>⚙ Admin</span>}
         </div>
@@ -476,7 +579,8 @@ export default function App() {
           <span className="mobile-nav-link" onClick={() => { navigate('blog'); setMobileMenu(false); }}>Blog</span>
           <span className="mobile-nav-link" onClick={() => { navigate('contact'); setMobileMenu(false); }}>Contact</span>
           {user && <span className="mobile-nav-link" onClick={() => { navigate('dashboard'); setMobileMenu(false); }}>My Tree</span>}
-          <span className="mobile-nav-link" onClick={() => { navigate('home'); setMobileMenu(false); setTimeout(() => document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth' }), 100); }}>Shop</span>
+          <span className="mobile-nav-link" onClick={() => { navigate('trees'); setMobileMenu(false); }}>Pick a Tree</span>
+          <span className="mobile-nav-link" onClick={() => { navigate('boxes'); setMobileMenu(false); }}>Pick the Boxes</span>
           {!user && (
             <div className="mobile-menu-auth">
               <button className="btn-sm outline" onClick={() => { setAuthModal('login'); setMobileMenu(false); }}>Login</button>
@@ -752,9 +856,9 @@ export default function App() {
           <div className="auth-modal">
             <button className="auth-close" onClick={() => setRentModal(null)}>✕</button>
             <h2>Rent {PLAN_LABEL[rentModal.plan]}</h2>
-            <p className="auth-sub">₹{rentModal.pricePerSeason.toLocaleString()} · {rentModal.yieldMin}–{rentModal.yieldMax} kg · Season 2026</p>
+            <p className="auth-sub">₹{rentModal.pricePerSeason.toLocaleString()} · {rentModal.yieldMin}–{rentModal.yieldMax} kg · Season {CURRENT_SEASON}</p>
             <select value={rentForm.season} onChange={e => setRentForm(f => ({ ...f, season: e.target.value }))}>
-              <option value="2026">Season 2026</option>
+              <option value={CURRENT_SEASON}>Season {CURRENT_SEASON}</option>
             </select>
             <button className="btn-primary full" onClick={() => {
               setCart(prev => {
@@ -763,7 +867,7 @@ export default function App() {
                 return [...prev, { id: rentModal._id, name: rentModal.name, price: rentModal.pricePerSeason, qty: 1, img: '/hero-mango-v3.jpg', type: 'tree', treeObj: rentModal, season: rentForm.season }];
               });
               setRentModal(null);
-              setRentForm({ treeId: '', deliveryAddress: '', season: '2026' });
+              setRentForm({ treeId: '', deliveryAddress: '', season: CURRENT_SEASON });
               setCartOpen(true);
             }}>
               Add to Cart →
@@ -786,16 +890,16 @@ export default function App() {
               </select>
               <input placeholder="Delivery Address" value={rentForm.deliveryAddress} onChange={e => setRentForm(f => ({ ...f, deliveryAddress: e.target.value }))} />
               <select value={rentForm.season} onChange={e => setRentForm(f => ({ ...f, season: e.target.value }))}>
-                <option value="2026">Season 2026</option>
+                <option value={CURRENT_SEASON}>Season {CURRENT_SEASON}</option>
               </select>
               <button className="btn-primary" onClick={handleRent}>Confirm Rental</button>
             </div>
           </div>
           <div className="dash-section">
-            <h3>My Rentals</h3>
-            {rentals.length === 0 ? <p className="empty">No active rentals yet. Rent your first tree above!</p> : (
+            <h3>Active Rentals</h3>
+            {rentals.filter(r => r.status === 'active').length === 0 ? <p className="empty">No active rentals yet. Rent your first tree above!</p> : (
               <div className="rentals-list">
-                {rentals.map(r => (
+                {rentals.filter(r => r.status === 'active').map(r => (
                   <div key={r._id} className={`rental-card status-${r.status}`}>
                     <div className="rental-top">
                       <span className="rental-tree">{PLAN_EMOJI[r.tree?.plan]} {r.tree?.name}</span>
@@ -835,6 +939,166 @@ export default function App() {
                 ))}
               </div>
             )}
+          </div>
+          {rentals.filter(r => r.status !== 'active').length > 0 && (
+            <div className="dash-section">
+              <h3>Past Rentals</h3>
+              <div className="rentals-list">
+                {rentals.filter(r => r.status !== 'active').map(r => (
+                  <div key={r._id} className={`rental-card status-${r.status}`}>
+                    <div className="rental-top">
+                      <span className="rental-tree">{PLAN_EMOJI[r.tree?.plan]} {r.tree?.name}</span>
+                      <span className={`rental-badge ${r.status}`}>{r.status}</span>
+                    </div>
+                    <div className="rental-info">
+                      <span>Season: {r.season}</span>
+                      <span>Est. Yield: {r.estimatedYield} kg</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {view === 'boxes' && (
+        <div className="boxes-page">
+          <div className="boxes-page-header">
+            <span className="section-label">Just Want Mangoes?</span>
+            <h1>Order a <span>10 kg Box</span></h1>
+            <p>No tree rental needed. Pick your variety and get a fresh 10 kg box delivered straight from Ramnagar.</p>
+            <div className="prebook-banner">🌿 Prebook now — Harvest starts May 15</div>
+          </div>
+          <div className="boxes-page-grid">
+            {MANGO_BOXES.map(box => (
+              <div key={box.id} className="box-card">
+                <div className="box-card-img" style={{ backgroundImage: `url(${box.img})` }}>
+                  <div className="box-weight-badge">10 kg</div>
+                  <div className="box-tag-popup">{box.tag}</div>
+                </div>
+                <div className="box-card-body">
+                  <div className="box-name">{box.name}</div>
+                  <p className="box-desc">{box.desc}</p>
+                  <div className="box-price">₹{box.price.toLocaleString()} <span>/ box</span></div>
+                  <div className="card-actions">
+                    <button className="btn-outline" onClick={() => addToCart(box)}>Add to Cart</button>
+                    <button className="btn-primary" onClick={() => addToCart(box, true)}>Prebook</button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+        </div>
+      )}
+
+      {view === 'trees' && (
+        <div className="trees-page">
+          <div className="trees-page-header">
+            <div className="trees-page-title">
+              <span className="section-label">Our Orchard</span>
+              <h1>Pick Your <span>Tree</span></h1>
+              <p>Each tree is individually tagged and exclusively yours for the full season.</p>
+            </div>
+            <div className="trees-filter-bar">
+              {([['all','All'],['sapling','Small Tree'],['adult','Mid Tree'],['grand','Big Tree']] as const).map(([val, label]) => (
+                <button key={val} className={`trees-filter-pill ${treeFilter === val ? 'active' : ''}`} onClick={() => setTreeFilter(val)}>{label}</button>
+              ))}
+            </div>
+          </div>
+          <div className="trees-page-body">
+            {(() => {
+              const PLAN_LABEL_SHORT: Record<string, string> = { sapling: 'Small Tree', adult: 'Mid Tree', grand: 'Big Tree' };
+
+              const renderCard = (tree: Tree | null, plan: 'sapling' | 'adult' | 'grand', idx = 0) => {
+                if (!tree) return (
+                  <div key={`${plan}-empty-${idx}`} className="tpage-card tpage-card--empty">
+                    <div className="tpage-img" style={{ background: '#eaece6' }} />
+                    <div className="tpage-body">
+                      <div className="tpage-name" style={{ color: 'var(--gray)' }}>Not available</div>
+                    </div>
+                  </div>
+                );
+                return (
+                  <div key={tree._id} className={`tpage-card ${!tree.isAvailable ? 'tpage-card--booked' : ''}`}>
+                    <div className="tpage-img" style={{ backgroundImage: `url(${PLAN_IMAGES[tree.plan]})` }}>
+                      <span className={`tpage-size-badge tpage-size--${tree.plan}`}>{PLAN_LABEL_SHORT[tree.plan]}</span>
+                      {!tree.isAvailable && <span className="tpage-booked-overlay">Fully Booked</span>}
+                    </div>
+                    <div className="tpage-body">
+                      <div className="tpage-name">{tree.name}</div>
+                      <div className="tpage-meta">
+                        <span>🥭 {tree.yieldMin}–{tree.yieldMax} kg</span>
+                      </div>
+                      <div className="tpage-price">₹{tree.pricePerSeason.toLocaleString('en-IN')} <span>/ season</span></div>
+                      {tree.isAvailable ? (
+                        <button className="btn-primary full" onClick={() => { if (user) setRentModal(tree); else setAuthModal('register'); }}>
+                          Rent This Tree →
+                        </button>
+                      ) : (
+                        <button className="btn-primary full" disabled style={{ opacity: 0.5, cursor: 'not-allowed' }}>Fully Booked</button>
+                      )}
+                    </div>
+                  </div>
+                );
+              };
+
+              // Group by variety (first word of name), storing arrays
+              const varietyMap: Record<string, Partial<Record<'sapling'|'adult'|'grand', Tree[]>>> = {};
+              const varietyOrder: string[] = [];
+              trees.forEach(t => {
+                const variety = t.name.split(' ')[0];
+                if (!varietyMap[variety]) { varietyMap[variety] = {}; varietyOrder.push(variety); }
+                if (!varietyMap[variety][t.plan]) varietyMap[variety][t.plan] = [];
+                varietyMap[variety][t.plan]!.push(t);
+              });
+
+              const renderCol = (group: Tree[] | undefined, plan: 'sapling'|'adult'|'grand') => (
+                <div className="tpage-col-stack">
+                  {(group ?? [null]).map((t, i) => renderCard(t, plan, i))}
+                </div>
+              );
+
+              if (treeFilter !== 'all') {
+                return (
+                  <div className="tpage-variety-rows">
+                    {varietyOrder.map(variety => {
+                      const group = varietyMap[variety][treeFilter];
+                      if (!group?.length) return null;
+                      return (
+                        <div key={variety} className="tpage-variety-block">
+                          <div className="tpage-variety-label">{variety} Mango</div>
+                          <div className="tpage-filter-grid">
+                            {group.map((t, i) => renderCard(t, treeFilter, i))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              }
+
+              return (
+                <div className="tpage-variety-rows">
+                  <div className="tpage-col-labels">
+                    <div className="tpage-col-label"><span className="tpage-size-badge tpage-size--sapling">Small Tree</span></div>
+                    <div className="tpage-col-label"><span className="tpage-size-badge tpage-size--adult">Mid Tree</span></div>
+                    <div className="tpage-col-label"><span className="tpage-size-badge tpage-size--grand">Big Tree</span></div>
+                  </div>
+                  {varietyOrder.map(variety => (
+                    <div key={variety} className="tpage-variety-block">
+                      <div className="tpage-variety-label">{variety} Mango</div>
+                      <div className="tpage-variety-row">
+                        {renderCol(varietyMap[variety]['sapling'], 'sapling')}
+                        {renderCol(varietyMap[variety]['adult'],   'adult')}
+                        {renderCol(varietyMap[variety]['grand'],   'grand')}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
@@ -881,7 +1145,7 @@ export default function App() {
             <div className="contact-card">
               <div className="info-icon">📧</div>
               <h3>Email Us</h3>
-              <p>hello@yourorchard.in<br />support@yourorchard.in</p>
+              <p>support.YourOrchard@gmail.com</p>
             </div>
             <div className="contact-card">
               <div className="info-icon">📞</div>
@@ -1049,7 +1313,7 @@ export default function App() {
             </div>
             <div className="policy-section">
               <h3>5. Your Rights</h3>
-              <p>You can request access to, correction of, or deletion of your personal data at any time by emailing hello@yourorchard.in. We will respond within 7 business days.</p>
+              <p>You can request access to, correction of, or deletion of your personal data at any time by emailing support.YourOrchard@gmail.com. We will respond within 7 business days.</p>
             </div>
             <div className="policy-section">
               <h3>6. Cookies</h3>
@@ -1057,7 +1321,7 @@ export default function App() {
             </div>
             <div className="policy-section">
               <h3>7. Contact</h3>
-              <p>For any privacy-related concerns, write to us at hello@yourorchard.in.</p>
+              <p>For any privacy-related concerns, write to us at support.YourOrchard@gmail.com.</p>
             </div>
           </div>
         </div>
@@ -1086,7 +1350,7 @@ export default function App() {
             </div>
             <div className="policy-section">
               <h3>Delivery Issues</h3>
-              <p>If your harvest box arrives damaged, with significant spoilage, or does not arrive within 5 days of dispatch, contact us at hello@yourorchard.in with your order details and a photo. We will arrange a replacement shipment or issue a refund for the affected portion within 5 business days.</p>
+              <p>If your harvest box arrives damaged, with significant spoilage, or does not arrive within 5 days of dispatch, contact us at support.YourOrchard@gmail.com with your order details and a photo. We will arrange a replacement shipment or issue a refund for the affected portion within 5 business days.</p>
             </div>
             <div className="policy-section">
               <h3>How Refunds Are Processed</h3>
@@ -1094,7 +1358,7 @@ export default function App() {
             </div>
             <div className="policy-section">
               <h3>Contact for Refunds</h3>
-              <p>Email hello@yourorchard.in with your registered email and order details. Our team will get back to you within 2 business days.</p>
+              <p>Email support.YourOrchard@gmail.com with your registered email and order details. Our team will get back to you within 2 business days.</p>
             </div>
           </div>
         </div>
@@ -1136,11 +1400,11 @@ export default function App() {
             </div>
             <div className="policy-section">
               <h3>Failed Delivery</h3>
-              <p>If a delivery attempt fails (no one available to receive), the courier will attempt re-delivery once. If the second attempt also fails, the box will be held at the nearest courier hub for 48 hours. After that, the box may be returned. Perishable nature of the goods means we cannot re-ship returned boxes, but we will review each case individually — write to us at hello@yourorchard.in.</p>
+              <p>If a delivery attempt fails (no one available to receive), the courier will attempt re-delivery once. If the second attempt also fails, the box will be held at the nearest courier hub for 48 hours. After that, the box may be returned. Perishable nature of the goods means we cannot re-ship returned boxes, but we will review each case individually — write to us at support.YourOrchard@gmail.com.</p>
             </div>
             <div className="policy-section">
               <h3>Damaged or Spoiled Delivery</h3>
-              <p>If your box arrives with significant damage or spoilage, photograph the box and contents immediately and email hello@yourorchard.in within 24 hours of delivery. We will arrange a replacement or refund for the affected portion. Claims made after 24 hours of delivery may not be accepted.</p>
+              <p>If your box arrives with significant damage or spoilage, photograph the box and contents immediately and email support.YourOrchard@gmail.com within 24 hours of delivery. We will arrange a replacement or refund for the affected portion. Claims made after 24 hours of delivery may not be accepted.</p>
             </div>
             <div className="policy-section">
               <h3>Shipping Charges</h3>
@@ -1310,7 +1574,7 @@ export default function App() {
                     <span className="cart-total-price">₹{cartTotal.toLocaleString()}</span>
                   </div>
                   <p className="cart-delivery-note">Free delivery · Harvest from May 15</p>
-                  <button className="btn-primary full" onClick={proceedToCheckout}>
+                  <button className="btn-primary full" onClick={proceedToCheckout} disabled={cart.length === 0}>
                     {user ? 'Checkout →' : 'Login to Checkout →'}
                   </button>
                 </div>
@@ -1327,7 +1591,7 @@ export default function App() {
             <p className="footer-brand-desc">Fresh produce from our Ramnagar orchard to your door. Rent a tree for the season — simple, transparent, real.</p>
             <div className="footer-social">
               <a className="footer-social-btn" href="tel:+917535850398">📞</a>
-              <a className="footer-social-btn" href="mailto:hello@yourorchard.in">✉️</a>
+              <a className="footer-social-btn" href="mailto:support.YourOrchard@gmail.com">✉️</a>
               <a className="footer-social-btn" href="https://maps.google.com/?q=Ramnagar,Uttarakhand,India" target="_blank" rel="noopener noreferrer">📍</a>
             </div>
           </div>
@@ -1352,13 +1616,13 @@ export default function App() {
           </div>
           <div className="footer-col">
             <h4>Contact</h4>
-            <p className="footer-contact-line">hello@yourorchard.in</p>
+            <p className="footer-contact-line">support.YourOrchard@gmail.com</p>
             <p className="footer-contact-line dim">Ramnagar, Uttarakhand</p>
             <button className="footer-reserve-btn" onClick={() => { navigate('home'); setTimeout(() => document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth' }), 100); }}>Rent a Tree →</button>
           </div>
         </div>
         <div className="footer-bottom">
-          <p>© 2026 <strong>YourOrchard</strong>. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} <strong>YourOrchard</strong>. All rights reserved.</p>
           {user && (
             <button className="footer-logout-btn" onClick={logout}>Logout</button>
           )}

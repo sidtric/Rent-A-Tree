@@ -35,6 +35,130 @@ body { font-family: 'Outfit', system-ui, sans-serif; background: var(--bg); colo
 .nav-link-active { opacity: 1 !important; color: var(--green) !important; position: relative; }
 .nav-link-active::after { content: ''; position: absolute; left: 50%; transform: translateX(-50%); bottom: -10px; width: 24px; height: 2px; background: var(--green); border-radius: 2px; }
 .nav-link-admin { opacity: 1 !important; color: var(--green) !important; background: rgba(45,106,79,0.1); padding: 5px 12px; border-radius: 99px; font-size: 0.72rem; }
+
+/* Company dropdown */
+.nav-dropdown-wrap { position: relative; display: flex; align-items: center; }
+.nav-dropdown-trigger { cursor: pointer; }
+.nav-dropdown-menu { display: none; position: absolute; top: 100%; padding-top: 12px; left: 50%; transform: translateX(-50%); z-index: 300; }
+.nav-dropdown-wrap:hover .nav-dropdown-menu { display: flex; }
+.nav-dropdown-card { background: #fff; border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); padding: 8px 0; min-width: 150px; }
+.nav-dropdown-item { display: block; padding: 10px 20px; font-size: 0.78rem; font-weight: 700; color: var(--dark); text-transform: uppercase; letter-spacing: 0.8px; cursor: pointer; transition: background 0.15s, color 0.15s; white-space: nowrap; }
+.nav-dropdown-item:hover { background: var(--bg); color: var(--green); }
+
+/* ── Boxes Page ── */
+.boxes-page { min-height: 100vh; background: var(--bg); padding-bottom: 80px; }
+.boxes-page-header {
+  background: #fff; padding: 56px 40px 48px;
+  text-align: center;
+  border-bottom: 1px solid rgba(0,0,0,0.07);
+}
+.boxes-page-header h1 { font-size: 2.6rem; font-weight: 900; color: var(--dark); margin: 10px 0 12px; }
+.boxes-page-header h1 span { color: var(--green); }
+.boxes-page-header p { color: var(--gray); font-size: 0.95rem; max-width: 520px; margin: 0 auto 16px; }
+.boxes-page-grid {
+  max-width: 1100px; margin: 48px auto 0;
+  padding: 0 40px;
+  display: flex; gap: 28px; justify-content: center; flex-wrap: wrap;
+}
+@media (max-width: 600px) {
+  .boxes-page-header { padding: 36px 20px 32px; }
+  .boxes-page-header h1 { font-size: 1.9rem; }
+  .boxes-page-grid { padding: 0 20px; }
+}
+
+/* ── Trees Page ── */
+.trees-page { min-height: 100vh; background: var(--bg); padding-bottom: 80px; }
+.trees-page-header {
+  background: #fff; padding: 48px 40px 0;
+  border-bottom: 1px solid rgba(0,0,0,0.07);
+}
+.trees-page-title { max-width: 1100px; margin: 0 auto 28px; }
+.trees-page-title h1 { font-size: 2.4rem; font-weight: 900; color: var(--dark); margin: 8px 0 10px; }
+.trees-page-title h1 span { color: var(--green); }
+.trees-page-title p { color: var(--gray); font-size: 0.95rem; }
+.trees-filter-bar {
+  max-width: 1100px; margin: 0 auto;
+  display: flex; gap: 0; border-bottom: none;
+}
+.trees-filter-pill {
+  padding: 12px 24px; font-size: 0.78rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.8px;
+  border: none; background: transparent; color: var(--gray);
+  cursor: pointer; border-bottom: 3px solid transparent;
+  transition: color 0.18s, border-color 0.18s;
+}
+.trees-filter-pill:hover { color: var(--green); }
+.trees-filter-pill.active { color: var(--green); border-bottom-color: var(--green); }
+
+.trees-page-body { max-width: 1100px; margin: 40px auto 0; padding: 0 40px; }
+
+.tpage-variety-rows { display: flex; flex-direction: column; gap: 24px; }
+
+/* Column header labels row */
+.tpage-col-labels { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; margin-bottom: -8px; }
+.tpage-col-label { display: flex; justify-content: center; }
+
+/* Each variety = one row of 3 columns */
+.tpage-variety-block { display: flex; flex-direction: column; gap: 10px; }
+.tpage-variety-label {
+  font-size: 0.72rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.1em; color: var(--gray);
+  padding-left: 2px;
+}
+.tpage-variety-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; align-items: start; }
+/* Stack of cards within one column cell */
+.tpage-col-stack { display: flex; flex-direction: column; gap: 16px; }
+
+/* Single-filter view */
+.tpage-filter-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 24px; }
+.tpage-card {
+  background: #fff; border-radius: 16px; overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.07);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  display: flex; flex-direction: column;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.tpage-card:hover { transform: translateY(-4px); box-shadow: 0 10px 28px rgba(0,0,0,0.1); }
+.tpage-card--booked { opacity: 0.7; }
+.tpage-img {
+  height: 200px; position: relative;
+  background-size: cover; background-position: center;
+  background-color: #d4d8d0;
+}
+.tpage-size-badge {
+  position: absolute; top: 12px; left: 12px;
+  font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.5px; padding: 4px 12px; border-radius: 99px;
+}
+.tpage-size--sapling { background: #d8f3dc; color: #2d6a4f; }
+.tpage-size--adult   { background: #fff8e1; color: #f57f17; }
+.tpage-size--grand   { background: #fce4ec; color: #c62828; }
+.tpage-booked-overlay {
+  position: absolute; inset: 0; display: flex; align-items: center;
+  justify-content: center; background: rgba(0,0,0,0.35);
+  color: #fff; font-size: 0.85rem; font-weight: 800;
+  letter-spacing: 0.5px; text-transform: uppercase;
+}
+.tpage-body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+.tpage-name { font-size: 1rem; font-weight: 800; color: var(--dark); }
+.tpage-meta { display: flex; gap: 14px; font-size: 0.8rem; color: var(--gray); }
+.tpage-price { font-size: 1.4rem; font-weight: 900; color: var(--green); margin-top: 2px; }
+.tpage-price span { font-size: 0.8rem; font-weight: 400; color: var(--gray); }
+
+@media (max-width: 900px) {
+  .tpage-variety-row { grid-template-columns: repeat(2,1fr); }
+  .tpage-col-labels { grid-template-columns: repeat(2,1fr); }
+  .tpage-col-labels > :last-child { display: none; }
+}
+@media (max-width: 560px) {
+  .tpage-variety-row { grid-template-columns: 1fr; }
+  .tpage-col-labels { display: none; }
+  .trees-page-body { padding: 0 20px; }
+  .trees-page-header { padding: 32px 20px 0; }
+  .trees-page-title h1 { font-size: 1.8rem; }
+  .trees-filter-pill { padding: 10px 14px; font-size: 0.72rem; }
+}
+
 .nav-greeting { color: var(--gray); font-size: 0.88rem; }
 .nav-welcome {
   color: var(--green-dark);

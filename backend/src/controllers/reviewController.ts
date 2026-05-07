@@ -4,9 +4,10 @@ import Review from '../models/Review';
 export const createReview = async (req: Request, res: Response): Promise<void> => {
   try {
     const { rating, comment, name } = req.body;
+    if (!comment?.trim()) { res.status(400).json({ message: 'Comment is required' }); return; }
     const files = (req.files as Express.Multer.File[]) ?? [];
     const media = files.map(f => ({ url: (f as any).path, type: f.mimetype.startsWith('video') ? 'video' as const : 'image' as const }));
-    const review = await Review.create({ name: name || 'Anonymous', rating: Number(rating), comment, media });
+    const review = await Review.create({ name: name || 'Anonymous', rating: Number(rating), comment: comment.trim(), media });
     res.status(201).json(review);
   } catch {
     res.status(500).json({ message: 'Server error' });

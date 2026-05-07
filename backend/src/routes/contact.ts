@@ -1,9 +1,12 @@
 import { Router, Request, Response } from 'express';
+import rateLimit from 'express-rate-limit';
 import ContactMessage from '../models/ContactMessage';
+
+const contactLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 5, message: { message: 'Too many messages. Try again later.' } });
 
 const router = Router();
 
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', contactLimiter, async (req: Request, res: Response) => {
   try {
     const { name, email, message } = req.body;
     if (!name?.trim() || !email?.trim() || !message?.trim()) {
