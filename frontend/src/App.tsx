@@ -781,11 +781,9 @@ export default function App() {
             </div>
             <div className="mango-boxes">
               <div className="box-card box-card-coming-soon">
-                <div className="box-card-img" style={{ backgroundImage: `url(/mango-close.jpg)` }}>
-                  <div className="box-weight-badge">10 kg</div>
-                  <div className="cs-overlay">
-                    <span className="cs-label">Coming Soon</span>
-                  </div>
+                <div className="cs-box-face">
+                  <div className="cs-logo">YourOrchard</div>
+                  <div className="cs-label">Coming Soon</div>
                 </div>
                 <div className="box-card-body">
                   <div className="box-name">Fresh Mango Box</div>

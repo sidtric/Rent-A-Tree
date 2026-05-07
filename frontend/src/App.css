@@ -841,8 +841,9 @@ section.mango-box-section { background: var(--bg); padding-top: 32px !important;
 .box-price span { font-size: 0.82rem; font-weight: 400; color: var(--gray); letter-spacing: 0; }
 .box-price-dim { opacity: 0.35; }
 .box-card-coming-soon { width: 340px; }
-.cs-overlay { position: absolute; inset: 0; background: rgba(14,32,21,0.52); display: flex; align-items: center; justify-content: center; }
-.cs-label { color: #fff; font-size: 1.4rem; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; text-shadow: 0 2px 12px rgba(0,0,0,0.4); }
+.cs-box-face { height: 220px; background: #6B3F2A; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; border-radius: 0; }
+.cs-logo { color: #fff; font-size: 1.5rem; font-weight: 900; letter-spacing: -0.5px; font-family: inherit; opacity: 0.95; }
+.cs-label { color: rgba(255,255,255,0.7); font-size: 0.72rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; }
 .btn-waitlisted { background: #f0fdf4; color: var(--green); border: 1.5px solid var(--green); border-radius: 99px; padding: 11px 20px; font-weight: 700; font-size: 0.88rem; cursor: default; font-family: inherit; width: 100%; }
 
 /* ── All Trees ── */
