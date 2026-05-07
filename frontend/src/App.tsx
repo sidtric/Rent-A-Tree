@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, Fragment } from 'react';
 import { api } from './api';
 import type { Tree, Rental, User, Review, FarmUpdate, Video, FarmPhoto, PublicUpdate } from './types';
 import AdminDashboard from './admin/AdminDashboard';
@@ -21,18 +21,18 @@ const STEPS = [
 ];
 
 const PLAN_IMAGES: Record<string, string> = {
-  sapling: '/hero-mango-v3.jpg',
-  adult:   '/hero-mango-v3.jpg',
-  grand:   '/hero-mango-v3.jpg',
+  sapling: '/mango-close.jpg',
+  adult:   '/mango-close.jpg',
+  grand:   '/mango-close.jpg',
 };
 
 const GALLERY_PHOTOS = [
-  { url: '/hero-mango-v3.jpg', label: 'Fresh Mangoes' },
-  { url: '/hero-mango-v3.jpg', label: 'Yellow Alphonso' },
-  { url: '/hero-mango-v3.jpg', label: 'Orchard Canopy' },
-  { url: '/hero-mango-v3.jpg', label: 'Our Farm' },
-  { url: '/hero-mango-v3.jpg', label: 'Open Fields' },
-  { url: '/hero-mango-v3.jpg', label: 'Harvest Basket' },
+  { url: '/orchard-hero.jpg', label: 'Fresh Mangoes' },
+  { url: '/orchard-hero.jpg', label: 'Yellow Alphonso' },
+  { url: '/orchard-hero.jpg', label: 'Orchard Canopy' },
+  { url: '/orchard-hero.jpg', label: 'Our Farm' },
+  { url: '/orchard-hero.jpg', label: 'Open Fields' },
+  { url: '/orchard-hero.jpg', label: 'Harvest Basket' },
 ];
 
 const FEATURES = [
@@ -45,6 +45,9 @@ const FEATURES = [
 ];
 
 const MANGO_BOXES = [
+  { id: 'chausa',   name: 'Chausa Mango',   tag: '✨ Jewel of Ramnagar',   desc: 'Velvety smooth, saffron-hued, and so juicy it\'s best enjoyed straight from the skin. Straight from our bagiche.',  price: 1299, img: '/mango-close.jpg' },
+  { id: 'dasheri',  name: 'Dasheri Mango',  tag: '❤️ People\'s Favourite', desc: 'Honey-sweet, thin-skinned, and loved by everyone. Plucked fresh from our Ramnagar orchard at peak ripeness.',         price: 1499, img: '/mango-close.jpg' },
+  { id: 'langra',   name: 'Langra Mango',   tag: '💛 Most Fulfilling',     desc: 'Buttery, fiberless, and deeply aromatic. One box from our Ramnagar bagiche and you\'re fully satisfied.',               price: 1399, img: '/mango-close.jpg' },
   { id: 'chausa',   name: 'Chausa Mango',   tag: '✨ Jewel of Ramnagar',   desc: 'Velvety smooth, saffron-hued, and so juicy it\'s best enjoyed straight from the skin. Straight from our bagiche.',  price: 1, img: '/mango-basket.jpg' },
   { id: 'dasheri',  name: 'Dasheri Mango',  tag: '❤️ People\'s Favourite', desc: 'Honey-sweet, thin-skinned, and loved by everyone. Plucked fresh from our Ramnagar orchard at peak ripeness.',         price: 1, img: '/mango-dasheri.jpg' },
   { id: 'langra',   name: 'Langra Mango',   tag: '💛 Most Fulfilling',     desc: 'Buttery, fiberless, and deeply aromatic. One box from our Ramnagar bagiche and you\'re fully satisfied.',               price: 1, img: '/mango-langra.jpg' },
@@ -53,32 +56,32 @@ const MANGO_BOXES = [
 const VARIETIES = [
   {
     id: 'chausa',  name: 'Chausa',  tagline: 'Jewel of Ramnagar',
-    img: '/mango-basket.jpg',
+    img: '/mango-close.jpg',
     treeImg: '/chausa-tree.jpg',
     gallery: [
-      '/mango-basket.jpg',
-      '/mango-basket.jpg',
-      '/mango-basket.jpg',
+      '/mango-close.jpg',
+      '/mango-close.jpg',
+      '/mango-close.jpg',
     ],
   },
   {
     id: 'dasheri', name: 'Dasheri', tagline: 'People\'s Favourite',
-    img: '/mango-dasheri.jpg',
+    img: '/mango-close.jpg',
     treeImg: '/dasheri-tree.jpg',
     gallery: [
-      '/mango-dasheri.jpg',
-      '/mango-dasheri.jpg',
-      '/mango-dasheri.jpg',
+      '/mango-close.jpg',
+      '/mango-close.jpg',
+      '/mango-close.jpg',
     ],
   },
   {
     id: 'langra',  name: 'Langra',  tagline: 'Most Fulfilling',
-    img: '/mango-langra.jpg',
+    img: '/mango-close.jpg',
     treeImg: '/langra-tree.jpg',
     gallery: [
-      '/mango-langra.jpg',
-      '/mango-langra.jpg',
-      '/mango-langra.jpg',
+      '/mango-close.jpg',
+      '/mango-close.jpg',
+      '/mango-close.jpg',
     ],
   },
 ];
@@ -611,20 +614,29 @@ export default function App() {
               <h1 className="hero-heading">Rent a <span>Tree.</span></h1>
               <p className="hero-subheading">Fresh Harvest, Delivered to You.</p>
               <p className="hero-sub">Own the harvest without owning the farm. Rent your own tree in Ramnagar, Uttarakhand and enjoy farm-fresh fruits delivered straight to your door.</p>
-              <div className="hero-btns">
-                <button className="btn-primary" onClick={() => { navigate('home'); setTimeout(() => document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth' }), 100); }}>Browse Trees →</button>
-                <button className="btn-outline" onClick={() => document.getElementById('how-it-works')?.scrollIntoView({ behavior: 'smooth' })}>▶ How it works</button>
-              </div>
-              <div className="hero-trust">
-                <div className="trust-item"><span>📅</span> Weekly Updates</div>
-                <div className="trust-item"><span>🌱</span> Natural Farming</div>
-                <div className="trust-item"><span>🛡️</span> Safe &amp; Secure</div>
-                <div className="trust-item"><span>📦</span> Free Delivery</div>
+              <div className="hero-cta-block">
+                <div className="hero-cta-pills">
+                  <div className="hero-step">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2L8 7h2v4H6l4 5h-2l4 6 4-6h-2l4-5h-4V7h2z"/></svg>
+                    <span>Select Your Tree</span>
+                  </div>
+                  <div className="hero-step">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.624l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></svg>
+                    <span>Track Harvest</span>
+                  </div>
+                  <div className="hero-step">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+                    <span>Get Delivered</span>
+                  </div>
+                </div>
+                <div className="cta-amber-wrap">
+                  <button className="btn-cta-amber" onClick={() => { navigate('home'); setTimeout(() => document.getElementById('plans')?.scrollIntoView({ behavior: 'smooth' }), 100); }}>Rent Your Tree Now</button>
+                </div>
               </div>
             </div>
             <div className="hero-visual">
               <div className="hero-img-wrap">
-                <img className="hero-img" src="/hero-mango-v3.jpg" alt="Mango orchard at sunset in Ramnagar, Uttarakhand" />
+                <img className="hero-img" src="/mango-close.jpg" alt="Fresh mangoes hanging on tree in Ramnagar, Uttarakhand" />
               </div>
             </div>
           </section>
@@ -667,62 +679,78 @@ export default function App() {
               <p>Pick a variety, then choose your tree size. All plans include free home delivery.</p>
             </div>
 
-            <div className="variety-row">
-              {VARIETIES.map(variety => (
-                <div
-                  key={variety.id}
-                  className={`variety-card ${selectedVariety === variety.id ? 'active' : ''}`}
-                  onClick={() => setSelectedVariety(selectedVariety === variety.id ? null : variety.id)}
-                >
-                  <div className="variety-card-img" style={{ backgroundImage: `url(${variety.img})` }} />
-                  <div className="variety-card-info">
-                    <span className="variety-card-name">{variety.name} Aam</span>
-                    <span className="variety-card-tagline">{variety.tagline}</span>
+            {(() => {
+              const renderPopup = (variantClass: string) => {
+                const variety = VARIETIES.find(v => v.id === selectedVariety);
+                if (!variety) return null;
+                return (
+                  <div className={`tree-size-popup ${variantClass}`}>
+                    <div className="tree-size-popup-header">
+                      {variety.name} Aam — Choose Tree Size
+                    </div>
+                    <div className="tree-size-grid">
+                      {TREE_SIZES.map(size => {
+                        const available = trees.filter(t => t.plan === size.plan && t.isAvailable).length;
+                        const treeRef = planCards.find(t => t.plan === size.plan);
+                        const treeImage = variety.treeImg || size.img;
+                        return (
+                          <div key={size.plan} className={`tsize-card ${treeRef && available === 0 ? 'unavailable' : ''}`}>
+                            <div className="tsize-img" style={{ backgroundImage: `url(${treeImage})` }}>
+                              <span className="tsize-badge">{size.icon} {size.label}</span>
+                            </div>
+                            <div className="tsize-body">
+                              <div className="tsize-yield">{treeRef ? `${treeRef.yieldMin}–${treeRef.yieldMax}` : size.yield} kg / season</div>
+                              <p className="tsize-perks">{size.perks}</p>
+                              {treeRef && <div className="tsize-price">₹{treeRef.priceMin.toLocaleString()} <span>– ₹{treeRef.priceMax.toLocaleString()}</span></div>}
+                              <div className="plan-loc">📍 Ramnagar, Uttarakhand</div>
+                              {treeRef
+                                ? available > 0
+                                  ? (
+                                    <div className="card-actions">
+                                      <button className="btn-outline" onClick={() => addTreeToCart(treeRef)}>Add to Cart</button>
+                                      <button className="btn-primary" onClick={() => addTreeToCart(treeRef, true)}>Prebook</button>
+                                    </div>
+                                  )
+                                  : <div className="unavail-badge">Fully Booked</div>
+                                : <button className="btn-primary full" onClick={() => { if (user) navigate('dashboard'); else setAuthModal('register'); }}>{user ? 'Rent Now' : 'Sign Up to Rent'}</button>
+                              }
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
-                  <span className="variety-card-arrow">{selectedVariety === variety.id ? '▲' : '▼'}</span>
-                </div>
-              ))}
-            </div>
-
-            {selectedVariety && (
-              <div className="tree-size-popup">
-                <div className="tree-size-popup-header">
-                  {VARIETIES.find(v => v.id === selectedVariety)?.name} Aam — Choose Tree Size
-                </div>
-                <div className="tree-size-grid">
-                  {TREE_SIZES.map(size => {
-                    const available = trees.filter(t => t.plan === size.plan && t.isAvailable).length;
-                    const treeRef = planCards.find(t => t.plan === size.plan);
-                    const variety = VARIETIES.find(v => v.id === selectedVariety);
-                    const treeImage = variety?.treeImg || size.img;
-                    return (
-                      <div key={size.plan} className={`tsize-card ${treeRef && available === 0 ? 'unavailable' : ''}`}>
-                        <div className="tsize-img" style={{ backgroundImage: `url(${treeImage})` }}>
-                          <span className="tsize-badge">{size.icon} {size.label}</span>
+                );
+              };
+              return (
+                <>
+                  <div className="variety-row">
+                    {VARIETIES.map(variety => (
+                      <Fragment key={variety.id}>
+                        <div
+                          className={`variety-card ${selectedVariety === variety.id ? 'active' : ''}`}
+                          onClick={(e) => {
+                            const card = e.currentTarget;
+                            const willOpen = selectedVariety !== variety.id;
+                            setSelectedVariety(willOpen ? variety.id : null);
+                            if (willOpen) setTimeout(() => card.scrollIntoView({ behavior: 'smooth', block: 'start' }), 80);
+                          }}
+                        >
+                          <div className="variety-card-img" style={{ backgroundImage: `url(${variety.img})` }} />
+                          <div className="variety-card-info">
+                            <span className="variety-card-name">{variety.name} Aam</span>
+                            <span className="variety-card-tagline">{variety.tagline}</span>
+                          </div>
+                          <span className="variety-card-arrow">{selectedVariety === variety.id ? '▲' : '▼'}</span>
                         </div>
-                        <div className="tsize-body">
-                          <div className="tsize-yield">{treeRef ? `${treeRef.yieldMin}–${treeRef.yieldMax}` : size.yield} kg / season</div>
-                          <p className="tsize-perks">{size.perks}</p>
-                          {treeRef && <div className="tsize-price">₹{treeRef.priceMin.toLocaleString()} <span>– ₹{treeRef.priceMax.toLocaleString()}</span></div>}
-                          <div className="plan-loc">📍 Ramnagar, Uttarakhand</div>
-                          {treeRef
-                            ? available > 0
-                              ? (
-                                <div className="card-actions">
-                                  <button className="btn-outline" onClick={() => addTreeToCart(treeRef)}>Add to Cart</button>
-                                  <button className="btn-primary" onClick={() => addTreeToCart(treeRef, true)}>Prebook</button>
-                                </div>
-                              )
-                              : <div className="unavail-badge">Fully Booked</div>
-                            : <button className="btn-primary full" onClick={() => { if (user) navigate('dashboard'); else setAuthModal('register'); }}>{user ? 'Rent Now' : 'Sign Up to Rent'}</button>
-                          }
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+                        {selectedVariety === variety.id && renderPopup('tree-size-popup-mobile')}
+                      </Fragment>
+                    ))}
+                  </div>
+                  {selectedVariety && renderPopup('tree-size-popup-desktop')}
+                </>
+              );
+            })()}
           </section>
 
           <section className="section mango-box-section" id="boxes">
@@ -864,7 +892,7 @@ export default function App() {
               setCart(prev => {
                 const existing = prev.find(i => i.id === rentModal._id);
                 if (existing) return prev;
-                return [...prev, { id: rentModal._id, name: rentModal.name, price: rentModal.pricePerSeason, qty: 1, img: '/hero-mango-v3.jpg', type: 'tree', treeObj: rentModal, season: rentForm.season }];
+                return [...prev, { id: rentModal._id, name: rentModal.name, price: rentModal.pricePerSeason, qty: 1, img: '/orchard-hero.jpg', type: 'tree', treeObj: rentModal, season: rentForm.season }];
               });
               setRentModal(null);
               setRentForm({ treeId: '', deliveryAddress: '', season: CURRENT_SEASON });

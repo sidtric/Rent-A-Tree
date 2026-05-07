@@ -14,11 +14,17 @@ export const createOrder = async (req: Request & { userId?: string }, res: Respo
     const { treeId } = req.body;
     const tree = await Tree.findById(treeId);
     if (!tree || !tree.isAvailable) { res.status(400).json({ message: 'Tree not available' }); return; }
-    const order = await getRazorpay().orders.create({ amount: tree.pricePerSeason * 100, currency: 'INR', receipt: `rcpt_${Date.now()}` });
+    const amount = Math.max(100, Math.round(tree.pricePerSeason * 100));
+    const order = await getRazorpay().orders.create({ amount, currency: 'INR', receipt: `rcpt_${Date.now()}` });
     res.json({ orderId: order.id, amount: order.amount, currency: order.currency, treeName: tree.name });
-  } catch (err) {
-    process.stdout.write(`[createOrder error] ${String(err)}\n`);
-    res.status(500).json({ message: 'Server error' });
+  } catch (err: any) {
+    console.error('[createOrder error]', {
+      message: err?.message,
+      statusCode: err?.statusCode,
+      error: err?.error,
+      raw: err,
+    });
+    res.status(500).json({ message: err?.error?.description || err?.message || 'Server error' });
   }
 };
 

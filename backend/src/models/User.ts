@@ -7,7 +7,7 @@ export interface IUser extends Document {
   password: string;
   phone?:   string;
   address?: string;
-  isAdmin:  boolean;
+  role:     'user' | 'admin';
   comparePassword(p: string): Promise<boolean>;
 }
 
@@ -18,7 +18,7 @@ const UserSchema = new Schema<IUser>(
     password: { type: String, required: true },
     phone:    { type: String },
     address:  { type: String },
-    isAdmin:  { type: Boolean, default: false },
+    role:     { type: String, enum: ['user', 'admin'], default: 'user' },
   },
   { timestamps: true }
 );

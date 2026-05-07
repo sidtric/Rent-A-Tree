@@ -5,7 +5,7 @@ import './admin.css';
 
 const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:5000';
 
-type Tab = 'overview' | 'trees' | 'reviews' | 'farmupdates' | 'videos' | 'farmphotos' | 'publicupdates';
+type Tab = 'overview' | 'trees' | 'reviews' | 'farmupdates' | 'videos' | 'farmphotos' | 'publicupdates' | 'userroles' | 'payments';
 
 const TABS: { id: Tab; icon: string; label: string }[] = [
   { id: 'overview',      icon: '📊', label: 'Overview'      },
@@ -14,6 +14,8 @@ const TABS: { id: Tab; icon: string; label: string }[] = [
   { id: 'farmupdates',   icon: '📷', label: 'User Updates'  },
   { id: 'videos',        icon: '🎥', label: 'Videos'        },
   { id: 'reviews',       icon: '⭐', label: 'Reviews'       },
+  { id: 'userroles',     icon: '🔑', label: 'User Roles'    },
+  { id: 'payments',      icon: '💳', label: 'Payments'      },
 ];
 
 interface TreeForm {
@@ -71,13 +73,27 @@ export default function AdminDashboard({ onExit, user }: Props) {
   const [puFiles, setPuFiles]               = useState<FileList | null>(null);
   const [puPosting, setPuPosting]           = useState(false);
 
+  // ── Payments ─────────────────────────────────────────────
+  const [payments, setPayments]             = useState<any[]>([]);
+  const [paymentsTotal, setPaymentsTotal]   = useState(0);
+  const [paymentsCaptured, setPaymentsCaptured] = useState(0);
+  const [paymentsLoading, setPaymentsLoading]   = useState(false);
+  const [paymentsError, setPaymentsError]       = useState('');
+  const [payCount, setPayCount]             = useState(50);
+
+  // ── User Roles ────────────────────────────────────────────
+  const [roleSearch, setRoleSearch]         = useState('');
+  const [roleResults, setRoleResults]       = useState<any[]>([]);
+  const [roleSearching, setRoleSearching]   = useState(false);
+  const [roleUpdating, setRoleUpdating]     = useState<string | null>(null);
+
   const flash = (m: string) => { setMsg(m); setTimeout(() => setMsg(''), 3500); };
 
   useEffect(() => {
-    api.get('/admin/trees').then(setTrees).catch(() => {});
-    api.get('/admin/reviews').then(setReviews).catch(() => {});
-    api.get('/admin/videos').then(setVideos).catch(() => {});
-    api.get('/admin/rentals').then(setMyRentals).catch(() => {});
+    api.get("/admin/trees").then(d => setTrees(Array.isArray(d) ? d : [])).catch(() => {});
+    api.get("/admin/reviews").then(d => setReviews(Array.isArray(d) ? d : [])).catch(() => {});
+    api.get("/admin/videos").then(d => setVideos(Array.isArray(d) ? d : [])).catch(() => {});
+    api.get("/admin/rentals").then(d => setMyRentals(Array.isArray(d) ? d : [])).catch(() => {});
     api.get('/admin/stats').then(setStats).catch(() => {});
     api.get('/farm-photos').then(setFarmPhotos).catch(() => {});
     api.get('/public-updates').then(setPublicUpdates).catch(() => {});
@@ -221,6 +237,41 @@ export default function AdminDashboard({ onExit, user }: Props) {
   const avgRating = reviews.length
     ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
     : '—';
+
+  const fetchPayments = async (count = payCount) => {
+    setPaymentsLoading(true); setPaymentsError('');
+    try {
+      const data = await api.get(`/admin/payments?count=${count}`);
+      if (data.message) { setPaymentsError(data.message); return; }
+      setPayments(data.payments || []);
+      setPaymentsTotal(data.total || 0);
+      setPaymentsCaptured(data.totalCaptured || 0);
+    } catch { setPaymentsError('Failed to load payments'); }
+    finally { setPaymentsLoading(false); }
+  };
+
+  const searchUsers = async () => {
+    if (!roleSearch.trim()) return;
+    setRoleSearching(true);
+    try {
+      const results = await api.get(`/admin/users/search?email=${encodeURIComponent(roleSearch.trim())}`);
+      setRoleResults(Array.isArray(results) ? results : []);
+      if (!Array.isArray(results) || results.length === 0) flash('No users found for that email');
+    } catch { flash('Search failed'); }
+    finally { setRoleSearching(false); }
+  };
+
+  const setRole = async (userId: string, role: 'user' | 'admin') => {
+    setRoleUpdating(userId);
+    try {
+      const updated = await api.patchBody(`/admin/users/${userId}/role`, { role });
+      if (updated._id) {
+        setRoleResults(prev => prev.map(u => u._id === userId ? updated : u));
+        flash(`Role updated to "${role}" successfully`);
+      } else flash(updated.message || 'Update failed');
+    } catch { flash('Failed to update role'); }
+    finally { setRoleUpdating(null); }
+  };
 
   const go = (t: Tab) => { setTab(t); setMobileOpen(false); };
 
@@ -904,6 +955,217 @@ export default function AdminDashboard({ onExit, user }: Props) {
                 <p className="adm-empty">No photos yet. Upload your first one above.</p>
               )}
             </div>
+          </div>
+        )}
+
+        {/* ── Payments Tab ───────────────────────────── */}
+        {tab === 'payments' && (
+          <div className="adm-pay-page">
+
+            {/* Header */}
+            <div className="adm-pay-header">
+              <div className="adm-pay-header-left">
+                <h2>💳 Payments</h2>
+                <p>Live payment data from Razorpay — {payments.length > 0 ? `${payments.length} transactions loaded` : 'No data loaded yet'}</p>
+              </div>
+            </div>
+
+            {/* Controls bar */}
+            <div className="adm-pay-bar">
+              <label>Show</label>
+              <select value={payCount} onChange={e => setPayCount(Number(e.target.value))}>
+                {[10, 25, 50, 100].map(n => <option key={n} value={n}>Last {n} payments</option>)}
+              </select>
+              <button className="adm-pay-refresh" onClick={() => fetchPayments(payCount)} disabled={paymentsLoading}>
+                {paymentsLoading ? <><span className="spin" />Loading…</> : payments.length ? '↻ Refresh' : '↻ Load Payments'}
+              </button>
+            </div>
+
+            {/* Error */}
+            {paymentsError && (
+              <div className="adm-pay-error">⚠️ {paymentsError}</div>
+            )}
+
+            {/* KPI Strip */}
+            {payments.length > 0 && (
+              <>
+                <div className="adm-pay-kpis">
+                  <div className="adm-pay-kpi">
+                    <div className="adm-pay-kpi-icon adm-pay-kpi-icon--green">💰</div>
+                    <div className="adm-pay-kpi-body">
+                      <div className="adm-pay-kpi-val">₹{paymentsCaptured.toLocaleString('en-IN')}</div>
+                      <div className="adm-pay-kpi-lbl">Revenue Captured</div>
+                    </div>
+                  </div>
+                  <div className="adm-pay-kpi">
+                    <div className="adm-pay-kpi-icon adm-pay-kpi-icon--blue">📋</div>
+                    <div className="adm-pay-kpi-body">
+                      <div className="adm-pay-kpi-val">{payments.length}</div>
+                      <div className="adm-pay-kpi-lbl">Total Transactions</div>
+                    </div>
+                  </div>
+                  <div className="adm-pay-kpi">
+                    <div className="adm-pay-kpi-icon adm-pay-kpi-icon--amber">✅</div>
+                    <div className="adm-pay-kpi-body">
+                      <div className="adm-pay-kpi-val">{payments.filter(p => p.status === 'captured').length}</div>
+                      <div className="adm-pay-kpi-lbl">Successful</div>
+                    </div>
+                  </div>
+                  <div className="adm-pay-kpi">
+                    <div className="adm-pay-kpi-icon adm-pay-kpi-icon--red">❌</div>
+                    <div className="adm-pay-kpi-body">
+                      <div className="adm-pay-kpi-val">{payments.filter(p => p.status === 'failed').length}</div>
+                      <div className="adm-pay-kpi-lbl">Failed</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Table */}
+                <div className="adm-pay-table-card">
+                  <div className="adm-pay-table-head">
+                    <h3>Transaction History</h3>
+                    <span className="adm-pay-count-pill">{payments.length} records</span>
+                  </div>
+                  <div style={{ overflowX: 'auto' }}>
+                    <table className="adm-pay-table">
+                      <thead>
+                        <tr>
+                          <th>Payment ID</th>
+                          <th>Amount</th>
+                          <th>Status</th>
+                          <th>Method</th>
+                          <th>Customer</th>
+                          <th>Rental</th>
+                          <th>Date</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {payments.map(p => {
+                          const statusLabel = { captured: 'Captured', failed: 'Failed', refunded: 'Refunded', authorized: 'Authorized', created: 'Pending' };
+                          return (
+                            <tr key={p.id}>
+                              <td><span className="adm-pay-id" title={p.id}>{p.id}</span></td>
+                              <td><span className="adm-pay-amount">₹{p.amount.toLocaleString('en-IN')}</span></td>
+                              <td>
+                                <span className={`adm-pay-badge adm-pay-badge--${p.status}`}>
+                                  <span className="adm-pay-badge-dot" />
+                                  {(statusLabel)[p.status] || p.status}
+                                </span>
+                              </td>
+                              <td><span className="adm-pay-method">{p.method || '—'}</span></td>
+                              <td>
+                                {p.rental?.user
+                                  ? <>
+                                      <div className="adm-pay-customer-name">{(p.rental.user).name}</div>
+                                      <div className="adm-pay-customer-email">{(p.rental.user).email}</div>
+                                    </>
+                                  : <div className="adm-pay-customer-email">{p.email || '—'}</div>
+                                }
+                              </td>
+                              <td>
+                                {p.rental
+                                  ? <>
+                                      <div className="adm-pay-rental-tree">{(p.rental.tree)?.name || '—'}</div>
+                                      <span className="adm-pay-rental-plan">{(p.rental.tree)?.plan}</span>
+                                    </>
+                                  : <span className="adm-pay-customer-email">—</span>
+                                }
+                              </td>
+                              <td><span className="adm-pay-date">{new Date(p.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span></td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </>
+            )}
+
+            {/* Empty state */}
+            {!paymentsLoading && payments.length === 0 && !paymentsError && (
+              <div className="adm-pay-table-card">
+                <div className="adm-pay-empty">
+                  <div className="adm-pay-empty-icon">💳</div>
+                  <h4>No payments loaded</h4>
+                  <p>Click “Load Payments” above to fetch live transaction data from Razorpay.</p>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ── User Roles Tab ──────────────────────────── */}
+        {tab === 'userroles' && (
+          <div className="adm-section">
+            <div className="adm-section-hdr">
+              <h2>🔑 User Roles</h2>
+              <p className="adm-section-sub">Search a user by email and grant or revoke admin access.</p>
+            </div>
+
+            <div className="adm-role-search-bar">
+              <input
+                className="adm-input"
+                placeholder="Search by email address..."
+                value={roleSearch}
+                onChange={e => setRoleSearch(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && searchUsers()}
+              />
+              <button
+                className="adm-btn-primary"
+                onClick={searchUsers}
+                disabled={roleSearching}
+              >
+                {roleSearching ? 'Searching…' : 'Search'}
+              </button>
+            </div>
+
+            {roleResults.length > 0 && (
+              <div className="adm-table-wrap">
+                <table className="adm-table">
+                  <thead>
+                    <tr>
+                      <th>Name</th>
+                      <th>Email</th>
+                      <th>Current Role</th>
+                      <th>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {roleResults.map(u => (
+                      <tr key={u._id}>
+                        <td>{u.name}</td>
+                        <td>{u.email}</td>
+                        <td>
+                          <span className={`adm-role-badge adm-role-badge--${u.role || 'user'}`}>
+                            {u.role === 'admin' ? '🔑 Admin' : '👤 User'}
+                          </span>
+                        </td>
+                        <td>
+                          {u.role === 'admin' ? (
+                            <button
+                              className="adm-btn-danger-sm"
+                              disabled={roleUpdating === u._id}
+                              onClick={() => setRole(u._id, 'user')}
+                            >
+                              {roleUpdating === u._id ? '…' : 'Revoke Admin'}
+                            </button>
+                          ) : (
+                            <button
+                              className="adm-btn-primary-sm"
+                              disabled={roleUpdating === u._id}
+                              onClick={() => setRole(u._id, 'admin')}
+                            >
+                              {roleUpdating === u._id ? '…' : 'Grant Admin'}
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
