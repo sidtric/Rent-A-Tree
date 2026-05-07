@@ -1492,22 +1492,24 @@ export default function App() {
       )}
 
       {cartOpen && (
-        <div className="cart-overlay" onClick={e => { if (e.target === e.currentTarget) { setCartOpen(false); setCartStep('items'); } }}>
-          <div className="cart-drawer">
-            <div className="cart-header">
-              {cartStep === 'address' ? (
-                <>
-                  <button className="cart-back" onClick={() => setCartStep('items')}>← Back</button>
-                  <h3>Delivery Address</h3>
-                </>
-              ) : (
-                <h3>Your Cart {cartCount > 0 && <span className="cart-header-count">{cartCount}</span>}</h3>
-              )}
-              <button className="cart-close" onClick={() => { setCartOpen(false); setCartStep('items'); }}>✕</button>
-            </div>
+        <div className="checkout-page">
+          <div className="checkout-header">
+            <button className="cart-back" onClick={() => setCartOpen(false)}>← Continue Shopping</button>
+            <div className="checkout-logo">YourOrchard</div>
+            <button className="cart-close" onClick={() => setCartOpen(false)}>✕</button>
+          </div>
 
-            {cartStep === 'address' ? (
-              <div className="cart-address-step">
+          {cart.length === 0 ? (
+            <div className="checkout-empty">
+              <div style={{ fontSize: '3.5rem' }}>🛒</div>
+              <p>Your cart is empty</p>
+              <span>Add a mango box or rent a tree to get started</span>
+              <button className="btn-primary" style={{ marginTop: '16px' }} onClick={() => setCartOpen(false)}>Browse →</button>
+            </div>
+          ) : (
+            <div className="checkout-body">
+              <div className="checkout-left">
+                <h2 className="checkout-section-title">Delivery Details</h2>
                 <p className="cart-address-hint">Where should we deliver your harvest?</p>
                 <div className="addr-form">
                   <div className="addr-row">
@@ -1543,12 +1545,55 @@ export default function App() {
                     <input placeholder="6-digit PIN" type="tel" maxLength={6} value={addrForm.pin} onChange={e => setAddrForm(f => ({ ...f, pin: e.target.value.replace(/\D/g, '') }))} />
                   </div>
                 </div>
-                <div className="cart-footer">
-                  <div className="cart-total-row">
-                    <span>Total</span>
-                    <span className="cart-total-price">₹{cartTotal.toLocaleString()}</span>
+              </div>
+
+              <div className="checkout-right">
+                <div className="order-summary-card">
+                  <h2 className="checkout-section-title">Order Summary</h2>
+                  <div className="order-items">
+                    {cart.map(item => (
+                      <div key={item.id} className="order-item-row">
+                        <div className="order-item-img" style={{ backgroundImage: `url(${item.img})` }} />
+                        <div className="order-item-info">
+                          <div className="order-item-name">{item.name}</div>
+                          {item.type === 'tree' ? (
+                            <div className="order-item-sub">Tree rental · Season {item.season}</div>
+                          ) : (
+                            <>
+                              <div className="order-item-sub">10 kg box · ₹{item.price.toLocaleString()}</div>
+                              <div className="cart-item-controls">
+                                <button onClick={() => updateQty(item.id, item.qty - 1)}>−</button>
+                                <span>{item.qty}</span>
+                                <button onClick={() => updateQty(item.id, item.qty + 1)}>+</button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                        <div className="order-item-right">
+                          <div className="cart-item-total">₹{(item.price * item.qty).toLocaleString()}</div>
+                          <button className="cart-item-remove" onClick={() => removeFromCart(item.id)}>✕</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="order-breakdown">
+                    <div className="order-line">
+                      <span>Subtotal</span>
+                      <span>₹{cartTotal.toLocaleString()}</span>
+                    </div>
+                    <div className="order-line">
+                      <span>Delivery</span>
+                      <span className="order-free">Free</span>
+                    </div>
+                    <div className="order-divider" />
+                    <div className="order-line order-total-line">
+                      <span>Total</span>
+                      <span>₹{cartTotal.toLocaleString()}</span>
+                    </div>
+                    <p className="cart-delivery-note">Harvest from May 15 onwards</p>
                   </div>
                   <button className="btn-primary full" onClick={() => {
+                    if (!user) { setAuthModal('register'); setCartOpen(false); return; }
                     const { name, phone, house, street, city, state, pin } = addrForm;
                     if (!name.trim() || !phone.trim() || !house.trim() || !city.trim() || !state.trim() || !pin.trim()) {
                       setMsg('Please fill all address fields'); return;
@@ -1558,57 +1603,12 @@ export default function App() {
                     const fullAddress = `${name}, ${phone} — ${house}, ${street ? street + ', ' : ''}${city}, ${state} - ${pin}`;
                     checkoutCart(fullAddress);
                   }}>
-                    Pay ₹{cartTotal.toLocaleString()} →
+                    {user ? `Pay ₹${cartTotal.toLocaleString()} →` : 'Login to Checkout →'}
                   </button>
                 </div>
               </div>
-            ) : cart.length === 0 ? (
-              <div className="cart-empty">
-                <div className="cart-empty-icon">🛒</div>
-                <p>Your cart is empty</p>
-                <span>Add a mango box or rent a tree to get started</span>
-              </div>
-            ) : (
-              <>
-                <div className="cart-items">
-                  {cart.map(item => (
-                    <div key={item.id} className="cart-item">
-                      <div className="cart-item-img" style={{ backgroundImage: `url(${item.img})` }} />
-                      <div className="cart-item-info">
-                        <div className="cart-item-name">{item.name}</div>
-                        {item.type === 'tree' ? (
-                          <div className="cart-item-sub">Tree rental · Season {item.season}</div>
-                        ) : (
-                          <>
-                            <div className="cart-item-sub">10 kg box · ₹{item.price.toLocaleString()}</div>
-                            <div className="cart-item-controls">
-                              <button onClick={() => updateQty(item.id, item.qty - 1)}>−</button>
-                              <span>{item.qty}</span>
-                              <button onClick={() => updateQty(item.id, item.qty + 1)}>+</button>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                      <div className="cart-item-right">
-                        <div className="cart-item-total">₹{(item.price * item.qty).toLocaleString()}</div>
-                        <button className="cart-item-remove" onClick={() => removeFromCart(item.id)}>✕</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <div className="cart-footer">
-                  <div className="cart-total-row">
-                    <span>Total</span>
-                    <span className="cart-total-price">₹{cartTotal.toLocaleString()}</span>
-                  </div>
-                  <p className="cart-delivery-note">Free delivery · Harvest from May 15</p>
-                  <button className="btn-primary full" onClick={proceedToCheckout} disabled={cart.length === 0}>
-                    {user ? 'Checkout →' : 'Login to Checkout →'}
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
 
