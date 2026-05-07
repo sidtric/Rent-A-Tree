@@ -141,6 +141,9 @@ export default function App() {
   const [cartOpen, setCartOpen] = useState(false);
   const [cartStep, setCartStep] = useState<'items' | 'address'>('items');
   const [addrForm, setAddrForm] = useState({ name: '', phone: '', house: '', street: '', city: '', state: '', pin: '' });
+  const [waitlistBox, setWaitlistBox] = useState<{ id: string; name: string } | null>(null);
+  const [waitlistForm, setWaitlistForm] = useState({ name: '', email: '' });
+  const [waitlistDone, setWaitlistDone] = useState<string[]>([]);
 
   useEffect(() => {
     const t = setInterval(() => setFeatIdx(i => (i + 1) % FEATURES.length), 3500);
@@ -264,6 +267,22 @@ export default function App() {
       rzp.open();
     } catch {
       setMsg('Payment failed. Please try again.');
+    }
+  };
+
+  const submitWaitlist = async () => {
+    if (!waitlistBox) return;
+    const { name, email } = waitlistForm;
+    if (!name.trim() || !email.trim()) { setMsg('Please enter your name and email'); return; }
+    if (!/\S+@\S+\.\S+/.test(email)) { setMsg('Enter a valid email address'); return; }
+    try {
+      await api.post('/contact', { name, email, message: `Waitlist signup: ${waitlistBox.name} 10 kg box` });
+      setWaitlistDone(prev => [...prev, waitlistBox.id]);
+      setWaitlistBox(null);
+      setWaitlistForm({ name: '', email: '' });
+      setMsg(`You're on the waitlist for ${waitlistBox.name}! We'll notify you when it's available.`);
+    } catch {
+      setMsg('Something went wrong. Please try again.');
     }
   };
 
@@ -758,7 +777,7 @@ export default function App() {
               <span className="section-label">Just Want Mangoes?</span>
               <h2>Order a <span>10 kg Box</span></h2>
               <p>No tree rental needed. Pick your variety and get a fresh 10 kg box delivered straight from Ramnagar.</p>
-              <div className="prebook-banner">🌿 Prebook now — Harvest starts May 15</div>
+              <div className="prebook-banner">🔔 Coming Soon — Join the waitlist to be first</div>
             </div>
             <div className="mango-boxes">
               {MANGO_BOXES.map(box => (
@@ -766,14 +785,18 @@ export default function App() {
                   <div className="box-card-img" style={{ backgroundImage: `url(${box.img})` }}>
                     <div className="box-weight-badge">10 kg</div>
                     <div className="box-tag-popup">{box.tag}</div>
+                    <div className="coming-soon-badge">Coming Soon</div>
                   </div>
                   <div className="box-card-body">
                     <div className="box-name">{box.name}</div>
                     <p className="box-desc">{box.desc}</p>
-                    <div className="box-price">₹{box.price.toLocaleString()} <span>/ box</span></div>
+                    <div className="box-price box-price-dim">₹{box.price.toLocaleString()} <span>/ box</span></div>
                     <div className="card-actions">
-                      <button className="btn-outline" onClick={() => addToCart(box)}>Add to Cart</button>
-                      <button className="btn-primary" onClick={() => addToCart(box, true)}>Prebook</button>
+                      {waitlistDone.includes(box.id) ? (
+                        <button className="btn-waitlisted" disabled>✓ You're on the list</button>
+                      ) : (
+                        <button className="btn-primary full" onClick={() => { setWaitlistBox(box); setWaitlistForm({ name: '', email: '' }); }}>Join Waitlist →</button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -996,7 +1019,7 @@ export default function App() {
             <span className="section-label">Just Want Mangoes?</span>
             <h1>Order a <span>10 kg Box</span></h1>
             <p>No tree rental needed. Pick your variety and get a fresh 10 kg box delivered straight from Ramnagar.</p>
-            <div className="prebook-banner">🌿 Prebook now — Harvest starts May 15</div>
+            <div className="prebook-banner">🔔 Coming Soon — Join the waitlist to be first</div>
           </div>
           <div className="boxes-page-grid">
             {MANGO_BOXES.map(box => (
@@ -1004,20 +1027,23 @@ export default function App() {
                 <div className="box-card-img" style={{ backgroundImage: `url(${box.img})` }}>
                   <div className="box-weight-badge">10 kg</div>
                   <div className="box-tag-popup">{box.tag}</div>
+                  <div className="coming-soon-badge">Coming Soon</div>
                 </div>
                 <div className="box-card-body">
                   <div className="box-name">{box.name}</div>
                   <p className="box-desc">{box.desc}</p>
-                  <div className="box-price">₹{box.price.toLocaleString()} <span>/ box</span></div>
+                  <div className="box-price box-price-dim">₹{box.price.toLocaleString()} <span>/ box</span></div>
                   <div className="card-actions">
-                    <button className="btn-outline" onClick={() => addToCart(box)}>Add to Cart</button>
-                    <button className="btn-primary" onClick={() => addToCart(box, true)}>Prebook</button>
+                    {waitlistDone.includes(box.id) ? (
+                      <button className="btn-waitlisted" disabled>✓ You're on the list</button>
+                    ) : (
+                      <button className="btn-primary full" onClick={() => { setWaitlistBox(box); setWaitlistForm({ name: '', email: '' }); }}>Join Waitlist →</button>
+                    )}
                   </div>
                 </div>
               </div>
             ))}
           </div>
-
         </div>
       )}
 
@@ -1609,6 +1635,21 @@ export default function App() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {waitlistBox && (
+        <div className="auth-overlay" onClick={e => { if (e.target === e.currentTarget) setWaitlistBox(null); }}>
+          <div className="auth-modal">
+            <button className="auth-close" onClick={() => setWaitlistBox(null)}>✕</button>
+            <div className="auth-logo">🥭</div>
+            <h2 className="auth-title">Join the Waitlist</h2>
+            <p className="auth-sub">Be first to know when <strong>{waitlistBox.name}</strong> boxes are ready to ship.</p>
+            <input className="auth-input" placeholder="Your name" value={waitlistForm.name} onChange={e => setWaitlistForm(f => ({ ...f, name: e.target.value }))} />
+            <input className="auth-input" type="email" placeholder="Email address" value={waitlistForm.email} onChange={e => setWaitlistForm(f => ({ ...f, email: e.target.value }))}
+              onKeyDown={e => { if (e.key === 'Enter') submitWaitlist(); }} />
+            <button className="btn-primary full" style={{ marginTop: '8px' }} onClick={submitWaitlist}>Notify Me →</button>
+          </div>
         </div>
       )}
 

@@ -839,6 +839,9 @@ section.mango-box-section { background: var(--bg); padding-top: 32px !important;
 .box-desc { font-size: 0.85rem; color: var(--gray); line-height: 1.5; flex: 1; margin: 4px 0 10px; }
 .box-price { font-size: 2rem; font-weight: 900; color: var(--dark); letter-spacing: -1px; line-height: 1.1; margin-bottom: 14px; }
 .box-price span { font-size: 0.82rem; font-weight: 400; color: var(--gray); letter-spacing: 0; }
+.box-price-dim { opacity: 0.35; }
+.coming-soon-badge { position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.72); color: #fff; font-size: 0.68rem; font-weight: 800; padding: 4px 10px; border-radius: 99px; letter-spacing: 0.8px; text-transform: uppercase; backdrop-filter: blur(4px); }
+.btn-waitlisted { background: #f0fdf4; color: var(--green); border: 1.5px solid var(--green); border-radius: 99px; padding: 11px 20px; font-weight: 700; font-size: 0.88rem; cursor: default; font-family: inherit; width: 100%; }
 
 /* ── All Trees ── */
 .all-trees-section { background: var(--bg); }
