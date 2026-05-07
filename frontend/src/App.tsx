@@ -782,19 +782,18 @@ export default function App() {
             <div className="mango-boxes">
               <div className="box-card box-card-coming-soon">
                 <div className="cs-box-face">
-                  <div className="cs-box-flaps">
-                    <div className="cs-flap cs-flap-l" />
-                    <div className="cs-flap cs-flap-r" />
-                  </div>
-                  <div className="cs-box-stamp">
-                    <div className="cs-stamp-logo">YourOrchard</div>
-                    <div className="cs-stamp-divider" />
-                    <div className="cs-stamp-sub">Ramnagar · Uttarakhand</div>
-                  </div>
-                  <div className="cs-box-bottom-strip">
-                    <span>10 KG</span>
-                    <span>Fresh Mangoes</span>
-                    <span className="cs-coming-soon-pill">Coming Soon</span>
+                  <div className="cs-crate">
+                    <div className="cs-crate-top">
+                      <div className="cs-crate-flap cs-crate-flap-l" />
+                      <div className="cs-crate-handle" />
+                      <div className="cs-crate-flap cs-crate-flap-r" />
+                    </div>
+                    <div className="cs-crate-front">
+                      <img src="/logo.jpeg" alt="YourOrchard" className="cs-crate-logo" />
+                      <div className="cs-crate-holes">
+                        {[0,1,2,3,4,5].map(i => <div key={i} className="cs-hole" />)}
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div className="box-card-body">
