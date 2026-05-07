@@ -780,27 +780,25 @@ export default function App() {
               <div className="prebook-banner">🔔 Coming Soon — Join the waitlist to be first</div>
             </div>
             <div className="mango-boxes">
-              {MANGO_BOXES.map(box => (
-                <div key={box.id} className="box-card">
-                  <div className="box-card-img" style={{ backgroundImage: `url(${box.img})` }}>
-                    <div className="box-weight-badge">10 kg</div>
-                    <div className="box-tag-popup">{box.tag}</div>
-                    <div className="coming-soon-badge">Coming Soon</div>
-                  </div>
-                  <div className="box-card-body">
-                    <div className="box-name">{box.name}</div>
-                    <p className="box-desc">{box.desc}</p>
-                    <div className="box-price box-price-dim">₹{box.price.toLocaleString()} <span>/ box</span></div>
-                    <div className="card-actions">
-                      {waitlistDone.includes(box.id) ? (
-                        <button className="btn-waitlisted" disabled>✓ You're on the list</button>
-                      ) : (
-                        <button className="btn-primary full" onClick={() => { setWaitlistBox(box); setWaitlistForm({ name: '', email: '' }); }}>Join Waitlist →</button>
-                      )}
-                    </div>
+              <div className="box-card box-card-coming-soon">
+                <div className="box-card-img" style={{ backgroundImage: `url(/mango-close.jpg)` }}>
+                  <div className="box-weight-badge">10 kg</div>
+                  <div className="cs-overlay">
+                    <span className="cs-label">Coming Soon</span>
                   </div>
                 </div>
-              ))}
+                <div className="box-card-body">
+                  <div className="box-name">Fresh Mango Box</div>
+                  <p className="box-desc">Handpicked from our Ramnagar orchard — Chausa, Dasheri & Langra. We'll notify you the moment they're ready to ship.</p>
+                  <div className="card-actions" style={{ marginTop: '8px' }}>
+                    {waitlistDone.includes('mango-box') ? (
+                      <button className="btn-waitlisted" disabled>✓ You're on the list</button>
+                    ) : (
+                      <button className="btn-primary full" onClick={() => { setWaitlistBox({ id: 'mango-box', name: 'Mango Box' }); setWaitlistForm({ name: '', email: '' }); }}>Join Waitlist →</button>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -1022,27 +1020,25 @@ export default function App() {
             <div className="prebook-banner">🔔 Coming Soon — Join the waitlist to be first</div>
           </div>
           <div className="boxes-page-grid">
-            {MANGO_BOXES.map(box => (
-              <div key={box.id} className="box-card">
-                <div className="box-card-img" style={{ backgroundImage: `url(${box.img})` }}>
-                  <div className="box-weight-badge">10 kg</div>
-                  <div className="box-tag-popup">{box.tag}</div>
-                  <div className="coming-soon-badge">Coming Soon</div>
-                </div>
-                <div className="box-card-body">
-                  <div className="box-name">{box.name}</div>
-                  <p className="box-desc">{box.desc}</p>
-                  <div className="box-price box-price-dim">₹{box.price.toLocaleString()} <span>/ box</span></div>
-                  <div className="card-actions">
-                    {waitlistDone.includes(box.id) ? (
-                      <button className="btn-waitlisted" disabled>✓ You're on the list</button>
-                    ) : (
-                      <button className="btn-primary full" onClick={() => { setWaitlistBox(box); setWaitlistForm({ name: '', email: '' }); }}>Join Waitlist →</button>
-                    )}
-                  </div>
+            <div className="box-card box-card-coming-soon">
+              <div className="box-card-img" style={{ backgroundImage: `url(/mango-close.jpg)` }}>
+                <div className="box-weight-badge">10 kg</div>
+                <div className="cs-overlay">
+                  <span className="cs-label">Coming Soon</span>
                 </div>
               </div>
-            ))}
+              <div className="box-card-body">
+                <div className="box-name">Fresh Mango Box</div>
+                <p className="box-desc">Handpicked from our Ramnagar orchard — Chausa, Dasheri & Langra. We'll notify you the moment they're ready to ship.</p>
+                <div className="card-actions" style={{ marginTop: '8px' }}>
+                  {waitlistDone.includes('mango-box') ? (
+                    <button className="btn-waitlisted" disabled>✓ You're on the list</button>
+                  ) : (
+                    <button className="btn-primary full" onClick={() => { setWaitlistBox({ id: 'mango-box', name: 'Mango Box' }); setWaitlistForm({ name: '', email: '' }); }}>Join Waitlist →</button>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
